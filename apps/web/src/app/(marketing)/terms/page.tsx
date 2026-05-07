@@ -114,7 +114,7 @@ export default function TermsPage() {
             {sections.map((section) => (
               <section key={section.title}>
                 <h2 className="mb-3 font-semibold text-xl">{section.title}</h2>
-                <p className="leading-relaxed text-muted-foreground">
+                <p className="text-muted-foreground leading-relaxed">
                   {section.content}
                 </p>
                 {section.list && (
@@ -133,7 +133,7 @@ export default function TermsPage() {
               <h2 className="mb-3 font-semibold text-xl">
                 13. Contact Information
               </h2>
-              <p className="leading-relaxed text-muted-foreground">
+              <p className="text-muted-foreground leading-relaxed">
                 For questions about these Terms, please contact us through our{" "}
                 <a
                   href="https://github.com/ruchernchong/release-watch/issues"

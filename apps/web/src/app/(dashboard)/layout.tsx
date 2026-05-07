@@ -1,5 +1,5 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { Suspense, type ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { RepoSearch } from "@/components/repos/repo-search";

@@ -56,11 +56,13 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
   );
 
   const handleTelegramToggle = (checked: boolean) => {
-    if (!optimisticTelegram.channel) return;
+    const channel = optimisticTelegram.channel;
+
+    if (!channel) return;
 
     startTransition(async () => {
       setOptimisticTelegram(checked);
-      await toggleTelegramChannel(optimisticTelegram.channel!.chatId, checked);
+      await toggleTelegramChannel(channel.chatId, checked);
     });
   };
 
@@ -92,10 +94,10 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
               </span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="font-mono text-5xl font-bold tracking-tighter">
+              <span className="font-bold font-mono text-5xl tracking-tighter">
                 {stats.reposWatched}
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 repositories tracked
               </span>
             </div>
@@ -119,7 +121,7 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
             </div>
             <div className="flex flex-col gap-1">
               <div className="flex items-baseline gap-2">
-                <span className="font-mono text-5xl font-bold tracking-tighter">
+                <span className="font-bold font-mono text-5xl tracking-tighter">
                   {stats.activeChannels}
                 </span>
                 {stats.totalChannels > 0 && (
@@ -128,7 +130,7 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
                   </span>
                 )}
               </div>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 notification channels
               </span>
             </div>
@@ -177,7 +179,7 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
               <div className="flex items-center gap-2">
                 <span className="font-semibold">Telegram</span>
                 {optimisticTelegram.linked && (
-                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-600 text-xs dark:text-emerald-400">
                     Connected
                   </span>
                 )}
@@ -187,7 +189,7 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
                   href="https://t.me/ReleaseWatch_Bot"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground"
                 >
                   <span>Open bot</span>
                   <ExternalLink className="size-3" />
@@ -215,7 +217,7 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
           <div className="flex h-full flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">Recent Releases</h2>
-              <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              <span className="font-mono text-muted-foreground text-xs uppercase tracking-wider">
                 Latest
               </span>
             </div>
@@ -225,8 +227,8 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
                 <div className="flex size-12 items-center justify-center rounded-full bg-muted">
                   <FolderGit2 className="size-5 text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground">No releases yet</p>
-                <p className="max-w-[200px] text-xs text-muted-foreground/70">
+                <p className="text-muted-foreground text-sm">No releases yet</p>
+                <p className="max-w-[200px] text-muted-foreground/70 text-xs">
                   Subscribe to repositories to see their latest releases here
                 </p>
               </div>

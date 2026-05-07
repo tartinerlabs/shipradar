@@ -56,10 +56,7 @@ function parseRepoInput(input: string): string | null {
   return match ? match[1] : null;
 }
 
-export function AddRepoDialog({
-  open,
-  onOpenChange,
-}: AddRepoDialogProps) {
+export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
   const [repoInput, setRepoInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<RepoPreview | null>(null);
