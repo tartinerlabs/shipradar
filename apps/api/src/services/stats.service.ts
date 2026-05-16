@@ -35,14 +35,20 @@ async function computeStats(
   };
 }
 
-export async function incrementNotificationsSent(env: Env): Promise<number> {
+export async function incrementNotificationsSent(
+  env: Env,
+  amount = 1,
+): Promise<number> {
   const stub = getStatsStub(env);
-  return stub.increment(NOTIFICATIONS_SENT_KEY);
+  return stub.increment(NOTIFICATIONS_SENT_KEY, amount);
 }
 
-export async function incrementReleasesNotified(env: Env): Promise<number> {
+export async function incrementReleasesNotified(
+  env: Env,
+  amount = 1,
+): Promise<number> {
   const stub = getStatsStub(env);
-  return stub.increment(RELEASES_NOTIFIED_KEY);
+  return stub.increment(RELEASES_NOTIFIED_KEY, amount);
 }
 
 export async function getSystemStats(env: Env): Promise<SystemStats> {

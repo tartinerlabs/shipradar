@@ -8,7 +8,7 @@ export function getPostHog(apiKey: string | undefined): PostHog | null {
   if (!client) {
     client = new PostHog(apiKey, {
       host: "https://eu.i.posthog.com",
-      flushAt: 1,
+      flushAt: 20,
       flushInterval: 0,
     });
   }
