@@ -1,1 +1,6 @@
-gitleaks protect --staged --verbose
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo >&2 "gitleaks is required for pre-commit secret scanning. Install it with: brew install gitleaks"
+  exit 1
+fi
+
+gitleaks git --staged --verbose --redact
