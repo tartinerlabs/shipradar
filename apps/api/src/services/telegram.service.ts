@@ -98,7 +98,9 @@ const MAX_FALLBACK_LINE_CHARS = 200;
 // Renders raw GitHub release notes into HTML-ready Telegram content when no AI
 // summary is available: bold section headings, one bullet per changelog item,
 // and an "…and N more" overflow line. Returns escaped HTML — do NOT re-escape.
-function formatFallbackReleaseNotes(body: string | null): string {
+export function formatFallbackReleaseNotes(
+  body: string | null | undefined,
+): string {
   if (!body?.trim()) {
     return "No release notes";
   }
@@ -184,13 +186,13 @@ function truncateAtWord(text: string, maxLength: number): string {
   return `${head}...`;
 }
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
-function escapeHtmlAttribute(text: string): string {
+export function escapeHtmlAttribute(text: string): string {
   return escapeHtml(text).replace(/"/g, "&quot;");
 }

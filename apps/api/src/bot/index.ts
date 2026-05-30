@@ -12,6 +12,11 @@ import {
   unlinkTelegramChat,
 } from "../services/kv.service";
 import {
+  escapeHtml,
+  escapeHtmlAttribute,
+  formatFallbackReleaseNotes,
+} from "../services/telegram.service";
+import {
   addTrackedRepoForChat,
   getTrackedReposForChat,
   getTrackedReposWithStateForChat,
@@ -26,22 +31,12 @@ const GITHUB_URL_PATTERN =
 
 function formatLatestRelease(release: GitHubRelease): string {
   const title = release.name || release.tag_name;
-  const truncatedBody = release.body
-    ? release.body.substring(0, 500) + (release.body.length > 500 ? "..." : "")
-    : "No release notes";
 
   return (
     `📦 <b>Latest Release: ${escapeHtml(title)}</b>\n\n` +
-    `${escapeHtml(truncatedBody)}\n\n` +
-    `<a href="${release.html_url}">View Release</a>`
+    `${formatFallbackReleaseNotes(release.body)}\n\n` +
+    `<a href="${escapeHtmlAttribute(release.html_url)}">View Release</a>`
   );
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 async function fetchAndFormatLatestRelease(
