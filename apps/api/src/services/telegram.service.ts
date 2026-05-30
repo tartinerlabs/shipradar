@@ -75,7 +75,7 @@ function formatTelegramMessage(payload: NotificationPayload): string {
   if (analysis?.summary) {
     parts.push(escapeHtml(analysis.summary));
   } else {
-    parts.push(escapeHtml(formatFallbackReleaseNotes(payload.body)));
+    parts.push(formatFallbackReleaseNotes(payload.body));
   }
 
   if (analysis?.highlights && analysis.highlights.length > 0) {
@@ -92,33 +92,96 @@ function formatTelegramMessage(payload: NotificationPayload): string {
   return parts.join("\n");
 }
 
+const MAX_FALLBACK_BULLETS = 8;
+const MAX_FALLBACK_LINE_CHARS = 200;
+
+// Renders raw GitHub release notes into HTML-ready Telegram content when no AI
+// summary is available: bold section headings, one bullet per changelog item,
+// and an "…and N more" overflow line. Returns escaped HTML — do NOT re-escape.
 function formatFallbackReleaseNotes(body: string | null): string {
   if (!body?.trim()) {
     return "No release notes";
   }
 
-  const cleaned = body
-    .replace(/```[\s\S]*?```/g, " ")
+  const withoutCodeFences = body.replace(/```[\s\S]*?```/g, " ");
+  const lines: string[] = [];
+  let bulletCount = 0;
+  let droppedBullets = 0;
+
+  for (const rawLine of withoutCodeFences.split("\n")) {
+    const line = rawLine.trim();
+    if (!line) {
+      continue;
+    }
+
+    const headingMatch = line.match(/^#{1,6}\s+(.*)$/);
+    if (headingMatch) {
+      const text = renderFallbackText(headingMatch[1]);
+      if (text) {
+        lines.push(`<b>${text}</b>`);
+      }
+      continue;
+    }
+
+    const bulletMatch = line.match(/^[-*+]\s+(.*)$/);
+    if (bulletMatch) {
+      const text = renderFallbackText(bulletMatch[1]);
+      if (!text) {
+        continue;
+      }
+      if (bulletCount >= MAX_FALLBACK_BULLETS) {
+        droppedBullets++;
+        continue;
+      }
+      lines.push(`• ${text}`);
+      bulletCount++;
+      continue;
+    }
+
+    const text = renderFallbackText(line);
+    if (text) {
+      lines.push(text);
+    }
+  }
+
+  if (droppedBullets > 0) {
+    lines.push(`…and ${droppedBullets} more`);
+  }
+
+  if (lines.length === 0) {
+    return "No release notes";
+  }
+
+  return lines.join("\n");
+}
+
+// Strips markdown noise from a single line, truncates on a word boundary, then
+// HTML-escapes the result so it is safe to embed in a Telegram HTML message.
+function renderFallbackText(text: string): string {
+  const cleaned = text
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/\[(.*?)\]\(https?:\/\/[^\s)]+\)/g, "$1")
     .replace(/`([^`]+)`/g, "$1")
-    .replace(/^#{1,6}\s*/gm, "")
-    .replace(/^[-*+]\s+/gm, "• ")
     .replace(/https?:\/\/\S+/g, "")
-    .replace(/[>*_~]/g, "")
-    .replace(/[\t\r\n]+/g, " ")
+    .replace(/[*~]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
-  return truncate(cleaned || "No release notes", 360);
+  return escapeHtml(truncateAtWord(cleaned, MAX_FALLBACK_LINE_CHARS));
 }
 
-function truncate(text: string, maxLength: number): string {
+function truncateAtWord(text: string, maxLength: number): string {
   if (text.length <= maxLength) {
     return text;
   }
 
-  return `${text.slice(0, maxLength - 3).trimEnd()}...`;
+  const slice = text.slice(0, maxLength - 3);
+  const lastSpace = slice.lastIndexOf(" ");
+  const head = (lastSpace > 0 ? slice.slice(0, lastSpace) : slice)
+    .replace(/[\s•·,;:]+$/, "")
+    .trimEnd();
+
+  return `${head}...`;
 }
 
 function escapeHtml(text: string): string {
