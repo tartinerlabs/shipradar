@@ -10,22 +10,20 @@ import { requestId } from "hono/request-id";
 // import dashboard from "./routes/dashboard";
 import health from "./routes/health";
 
-// import internal from "./routes/internal";
+import internal from "./routes/internal";
 // import repos from "./routes/repos";
-// import stats from "./routes/stats";
-// import webhook from "./routes/webhook";
+import stats from "./routes/stats";
+import webhook from "./routes/webhook";
 
 const app = new Hono()
   .use("*", requestId())
   .route("/", health)
+  .route("/", stats)
+  .route("/", webhook)
+  .route("/", internal)
   .onError((error, c) => {
     return c.json({ error: error.message });
   });
-
-// Public routes (no auth)
-// app.route("/", stats);
-// app.route("/", webhook);
-// app.route("/", internal);
 
 // Authenticated API routes
 // const api = new Hono<AuthEnv>()
