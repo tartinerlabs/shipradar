@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "cache": true,
-      "outputs": [".output"]
+      "outputs": ["$TURBO_DEFAULT$", ".output"]
     },
     "dev": {
       "cache": false,
