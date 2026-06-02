@@ -14,7 +14,8 @@ import health from "./routes/health";
 
 import repos from "./routes/repos";
 import stats from "./routes/stats";
-import webhook from "./routes/webhook";
+
+// import webhook from "./routes/webhook";
 
 // Authenticated API routes
 const api = new Hono<AuthEnv>()
@@ -38,7 +39,7 @@ const app = new Hono()
   .route("/", health)
   .route("/health", health)
   .route("/", stats)
-  .route("/", webhook)
+  // .route("/", webhook)
   // .route("/internal", internal)
   .route("/", api)
   .route("/", admin)
