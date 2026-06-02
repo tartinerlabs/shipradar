@@ -12,10 +12,9 @@ import repos from "./routes/repos";
 import stats from "./routes/stats";
 import webhook from "./routes/webhook";
 
-const app = new Hono();
+const app = new Hono().route("/", health);
 
 // Public routes (no auth)
-app.route("/", health);
 // app.route("/", stats);
 // app.route("/", webhook);
 // app.route("/", internal);
@@ -37,7 +36,6 @@ app.route("/", health);
 //   .route("/", adminActivity)
 //   .route("/", adminStats);
 
-export const routes = app.route("/", api);
 // .route("/", admin);
 
 export type AppType = typeof app;
