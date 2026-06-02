@@ -35,6 +35,7 @@ const admin = new Hono<AuthEnv>()
 
 const app = new Hono()
   .use("*", requestId())
+  .route("/", health)
   .route("/health", health)
   .route("/", stats)
   .route("/", webhook)
