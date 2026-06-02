@@ -2,11 +2,7 @@
   "$schema": "../../node_modules/turbo/schema.json",
   "extends": ["//"],
   "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "!README.md"],
-      "outputs": []
-    },
+    "build": {},
     "dev": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$"],
