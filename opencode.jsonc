@@ -12,13 +12,6 @@
       "type": "remote",
       "url": "https://mcp.polar.sh/mcp/polar-sandbox"
     },
-    "posthog": {
-      "type": "remote",
-      "url": "https://mcp.posthog.com/mcp",
-      "headers": {
-        "Authorization": "Bearer {env:POSTHOG_PERSONAL_API_KEY}"
-      }
-    },
     "sentry": {
       "type": "local",
       "command": [
