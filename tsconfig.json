@@ -11,8 +11,8 @@
     "incremental": true,
     "types": ["node"],
     "paths": {
-      "@api/*": ["apps/api/src/*"],
-      "@web/*": ["apps/web/src/*"]
+      "@api/*": ["./apps/api/src/*"],
+      "@web/*": ["./apps/web/src/*"]
     }
   }
 }
