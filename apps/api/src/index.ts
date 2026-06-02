@@ -9,7 +9,8 @@ import { requestId } from "hono/request-id";
 // import telegram from "./routes/channels/telegram";
 // import dashboard from "./routes/dashboard";
 import health from "./routes/health";
-import internal from "./routes/internal";
+
+// import internal from "./routes/internal";
 
 // import repos from "./routes/repos";
 // import stats from "./routes/stats";
@@ -20,7 +21,7 @@ const app = new Hono()
   .route("/health", health)
   // .route("/", stats)
   // .route("/", webhook)
-  .route("/internal", internal)
+  // .route("/internal", internal)
   .onError((error, c) => {
     return c.json({ error: error.message });
   });
