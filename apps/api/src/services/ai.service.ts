@@ -1,7 +1,7 @@
 import type { AIAnalysisResult, ReleaseCategory } from "@release-watch/types";
 import { logger } from "../lib/logger";
 
-const MODEL = "@cf/google/gemma-4-26b-a4b-it" as keyof AiModels;
+const MODEL = "minimax/m3" as keyof AiModels;
 const MAX_RELEASE_NOTES_CHARS = 6000;
 
 const RELEASE_CATEGORIES = [
