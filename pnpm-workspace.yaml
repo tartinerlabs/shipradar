@@ -14,13 +14,10 @@ allowBuilds:
   heroui-native-pro: true
   heroui-pro: true
   sharp: false
-  workerd: false
 
 catalog:
-  "@cloudflare/workers-types": 4.20260504.1
   "@hono/zod-validator": 0.7.6
   "@neondatabase/serverless": 1.0.2
-  "@sentry/cloudflare": 10.32.1
   "@sentry/nextjs": 10.32.1
   "@tailwindcss/postcss": 4.1.18
   "@upstash/redis": 1.35.8

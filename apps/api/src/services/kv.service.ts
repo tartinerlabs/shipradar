@@ -24,6 +24,10 @@ type KVListResult = {
   cursor?: string;
 };
 
+// TODO(cloudflare-migration): The Cloudflare-KV-style naming below (KVNamespaceLike,
+// KVGetType, KVListOptions, KVPutOptions, KVListResult, createKVNamespace) is a leftover
+// from the Workers era — this is backed by Upstash Redis now. Rename to a Redis-native
+// API (e.g. RedisStore / createRedisStore) when the call sites are next touched.
 type KVNamespaceLike = {
   get(key: string): Promise<string | null>;
   get<T>(key: string, type: "json"): Promise<T | null>;

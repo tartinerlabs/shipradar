@@ -60,7 +60,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "catalog:",
     "@shipradar/api": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
     "@types/node": "20.19.27",

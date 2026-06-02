@@ -94,7 +94,7 @@ export default function Home() {
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-8 text-muted-foreground text-sm sm:flex-row">
           <div className="flex flex-col items-center gap-4 sm:flex-row">
             <GitHubStars />
-            <p>Built with Cloudflare Workers, Next.js, and Neon PostgreSQL.</p>
+            <p>Built with Next.js, Hono on Vercel, and Neon PostgreSQL.</p>
           </div>
           <nav className="flex gap-6">
             <Link

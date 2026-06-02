@@ -26,7 +26,7 @@ interface JWKSResponse {
 
 type JWKSKey = Awaited<ReturnType<typeof importJWK>>;
 
-// Cache JWKS keys per isolate with TTL
+// Cache JWKS keys per server instance with TTL
 let cachedKeys: Map<string, JWKSKey> | null = null;
 let cachedJWKSUrl: string | null = null;
 let cacheExpiry = 0;

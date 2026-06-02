@@ -64,14 +64,14 @@ const sections = [
       {
         subtitle: "AI Services",
         content:
-          "We use Cloudflare AI to generate release summaries. Release notes may be processed by these services.",
+          "We use Vercel AI Gateway to generate release summaries. Release notes may be processed by these services.",
       },
     ],
   },
   {
     title: "4. Data Storage and Security",
     content:
-      "Your data is stored on Neon PostgreSQL (database) and Cloudflare (edge caching). We implement appropriate technical and organizational measures to protect your data, including encryption in transit and at rest.",
+      "Your data is stored on Neon PostgreSQL (database) and Upstash Redis (caching). We implement appropriate technical and organizational measures to protect your data, including encryption in transit and at rest.",
   },
   {
     title: "5. Data Retention",
@@ -196,7 +196,7 @@ export default function PrivacyPage() {
 
       <footer className="border-t">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-8 text-muted-foreground text-sm sm:flex-row">
-          <p>Built with Cloudflare Workers, Next.js, and Neon PostgreSQL.</p>
+          <p>Built with Next.js, Hono on Vercel, and Neon PostgreSQL.</p>
           <nav className="flex gap-6">
             <Link
               href="/terms"

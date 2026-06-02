@@ -152,7 +152,7 @@ export default function TermsPage() {
 
       <footer className="border-t">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-8 text-muted-foreground text-sm sm:flex-row">
-          <p>Built with Cloudflare Workers, Next.js, and Neon PostgreSQL.</p>
+          <p>Built with Next.js, Hono on Vercel, and Neon PostgreSQL.</p>
           <nav className="flex gap-6">
             <Link
               href="/terms"

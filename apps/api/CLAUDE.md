@@ -78,7 +78,7 @@ No versioning - internal API only.
 
 JWT tokens are issued by BetterAuth (Next.js) and verified here via JWKS.
 - Tokens fetched from `JWKS_URL` env var (e.g., `https://shipradar.dev/api/auth/jwks`)
-- JWKS is cached per isolate for performance
+- JWKS is cached per server instance for performance
 
 ## Redis Keys
 
@@ -110,7 +110,7 @@ PostHog tracks key API events:
 - `Discord Channel Removed` - User removes Discord channel
 - `Discord Channel Toggled` - User enables/disables Discord channel
 
-Service: `src/services/posthog.ts` (uses `posthog-node` with Workers-compatible settings)
+Service: `src/services/posthog.ts` (uses `posthog-node`)
 
 ## Environment
 

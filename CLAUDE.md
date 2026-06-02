@@ -8,16 +8,16 @@ ShipRadar monitors GitHub releases and sends Telegram notifications with AI summ
 
 ## Structure
 
-- `apps/api` - Cloudflare Worker (Hono + Grammy bot + REST API)
+- `apps/api` - Hono API on Vercel (Hono + Grammy bot + REST API)
 - `apps/web` - Next.js 16 dashboard (Vercel, BetterAuth only)
 - `packages/database` - Drizzle + BetterAuth + Neon
 - `packages/types` - Shared types
 
-Each app/package has its own `CLAUDE.md` with deeper detail (routes, KV namespaces, data-fetching patterns, schemas). Read it before working in that subtree.
+Each app/package has its own `CLAUDE.md` with deeper detail (routes, Redis key namespaces, data-fetching patterns, schemas). Read it before working in that subtree.
 
 ## API Architecture
 
-All REST APIs are served by Hono (Cloudflare Worker). Next.js only handles authentication via BetterAuth.
+All REST APIs are served by Hono on Vercel. Next.js only handles authentication via BetterAuth.
 
 ```
 Browser → Next.js (BetterAuth) → JWT token
@@ -59,11 +59,15 @@ pnpm auth:generate        # Regenerate BetterAuth schema
 
 ## Environment Variables
 
-**apps/api** (Cloudflare Secrets + .env):
+**apps/api** (Vercel env + .env):
+- `DATABASE_URL` - Neon Postgres connection string
 - `GITHUB_TOKEN` - GitHub API access
 - `TELEGRAM_BOT_TOKEN` - Telegram bot token
-- `DASHBOARD_API_KEY` - Admin API key
 - `JWKS_URL` - BetterAuth JWKS endpoint (e.g., `https://shipradar.dev/api/auth/jwks`)
+- `UPSTASH_REDIS_REST_URL` - Upstash Redis REST endpoint
+- `UPSTASH_REDIS_REST_TOKEN` - Upstash Redis REST token
+- `CRON_SECRET` - Bearer secret for the internal release-check cron endpoint
+- `AI_GATEWAY_API_KEY` - Vercel AI Gateway key (release summaries)
 - `DISCORD_WEBHOOK_URL` - Optional Discord notifications
 - `POSTHOG_API_KEY` - PostHog project API key (optional, for analytics)
 - `DEBUG` - Optional debug mode

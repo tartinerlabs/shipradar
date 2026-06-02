@@ -1,13 +1,13 @@
 # ShipRadar
 
-Monitor GitHub releases and receive Telegram notifications with AI-powered summaries. Full-stack monorepo with Next.js dashboard and Cloudflare Worker backend.
+Monitor GitHub releases and receive Telegram notifications with AI-powered summaries. Full-stack monorepo with a Next.js dashboard and a Hono API backend on Vercel.
 
 ## Features
 
 - **Web Dashboard**: Manage tracked repositories, view release history, and configure notification channels
 - **Authentication**: GitHub and Google OAuth via BetterAuth
 - **Real-time Notifications**: Get notified within 15 minutes of new releases via Telegram
-- **AI Summaries**: Automatic release analysis using Cloudflare AI (Llama 3.1 8B)
+- **AI Summaries**: Automatic release analysis via Vercel AI Gateway (OpenAI gpt-4.1-mini)
 - **Multi-Channel Support**: Telegram notifications with extensible channel system
 - **Pause/Resume**: Temporarily pause repository tracking without unsubscribing
 - **Analytics**: PostHog integration for product analytics and user behavior tracking
@@ -23,12 +23,12 @@ Monitor GitHub releases and receive Telegram notifications with AI-powered summa
 - Deployed on Vercel
 
 **Backend** (apps/api):
-- Cloudflare Workers (Hono framework)
+- Hono framework on Vercel (Nitro `node-server` preset)
 - Grammy Telegram bot
-- Cloudflare Workflows (durable execution)
-- KV (repo tracking, cache)
-- Durable Objects (SQLite stats)
-- Cloudflare AI (release summaries)
+- Vercel Workflows (durable background execution)
+- Vercel Cron (scheduled release checks)
+- Upstash Redis (repo tracking, cache)
+- Vercel AI Gateway (release summaries)
 - PostHog (event tracking for API actions)
 
 **Database** (packages/database):
@@ -41,7 +41,7 @@ Monitor GitHub releases and receive Telegram notifications with AI-powered summa
 ```
 release/
 ├── apps/
-│   ├── api/          # Cloudflare Worker (Hono + Grammy bot)
+│   ├── api/          # Hono API on Vercel (Hono + Grammy bot)
 │   └── web/          # Next.js 16 dashboard
 ├── packages/
 │   ├── database/     # Drizzle + BetterAuth schemas
@@ -56,7 +56,9 @@ release/
 
 - Node.js 20+ (see `.node-version`)
 - pnpm 10.22.0+
-- Cloudflare account (Workers, KV, AI)
+- Vercel account (API + web deployment)
+- Upstash Redis database
+- Vercel AI Gateway API key
 - Neon Postgres database
 - GitHub OAuth app
 - Google OAuth app (optional)
@@ -82,27 +84,21 @@ pnpm install
    pnpm auth:generate
    ```
 
-3. **Cloudflare** - Create KV namespaces:
+3. **API environment** - Set the API secrets locally in `apps/api/.env` (and in the
+   Vercel project settings for production):
    ```bash
-   cd apps/api
-   wrangler kv:namespace create REPOS
-   wrangler kv:namespace create NOTIFICATIONS
-   wrangler kv:namespace create CACHE
-   wrangler kv:namespace create CHANNELS
+   DATABASE_URL=          # Neon Postgres connection string
+   GITHUB_TOKEN=
+   TELEGRAM_BOT_TOKEN=
+   JWKS_URL=              # https://shipradar.dev/api/auth/jwks
+   UPSTASH_REDIS_REST_URL=
+   UPSTASH_REDIS_REST_TOKEN=
+   CRON_SECRET=
+   AI_GATEWAY_API_KEY=    # Vercel AI Gateway
+   POSTHOG_API_KEY=       # Optional, for analytics
    ```
 
-4. **Secrets** - Set Cloudflare secrets:
-   ```bash
-   cd apps/api
-   wrangler secret put DATABASE_URL  # Neon Postgres connection string
-   wrangler secret put GITHUB_TOKEN
-   wrangler secret put TELEGRAM_BOT_TOKEN
-   wrangler secret put DASHBOARD_API_KEY
-   wrangler secret put JWKS_URL  # https://shipradar.dev/api/auth/jwks
-   wrangler secret put POSTHOG_API_KEY  # Optional, for analytics
-   ```
-
-5. **Environment Files** - Copy and fill `.env.example` files:
+4. **Environment Files** - Copy and fill `.env.example` files:
    ```bash
    cp apps/api/.env.example apps/api/.env.local
    cp apps/web/.env.example apps/web/.env.local
@@ -112,7 +108,7 @@ pnpm install
 ### Development
 
 ```bash
-pnpm dev  # Start all apps (Next.js + Wrangler)
+pnpm dev  # Start all apps (Next.js + Nitro/Vercel dev server)
 ```
 
 Individual apps:
@@ -138,10 +134,11 @@ cd apps/web
 vercel deploy
 ```
 
-**API** (Cloudflare):
+**API** (Vercel):
 ```bash
 cd apps/api
-wrangler deploy --minify
+pnpm build        # nitro build
+vercel deploy     # or push to a branch connected to the Vercel project
 ```
 
 ## Usage
@@ -166,7 +163,7 @@ Visit the dashboard to:
 
 ## API Architecture
 
-All REST APIs are served by Hono (Cloudflare Worker). Next.js handles authentication only.
+All REST APIs are served by Hono on Vercel. Next.js handles authentication only.
 
 ```
 Browser → Next.js (BetterAuth) → JWT token
