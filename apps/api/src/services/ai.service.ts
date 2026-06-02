@@ -3,6 +3,8 @@ import { logger } from "../lib/logger";
 
 const MODEL = "minimax/m3" as keyof AiModels;
 const MAX_RELEASE_NOTES_CHARS = 6000;
+const DEFAULT_AI_GATEWAY_ID = "default";
+const AI_GATEWAY_CACHE_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 const RELEASE_CATEGORIES = [
   "major",
@@ -70,6 +72,7 @@ Provide:
 
 export async function analyzeRelease(
   ai: Ai,
+  gatewayId: string | undefined,
   repoName: string,
   tagName: string,
   releaseName: string | null,
@@ -87,22 +90,26 @@ export async function analyzeRelease(
   );
 
   try {
-    const response = await ai.run(MODEL, {
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-      max_tokens: 300,
-      temperature: 0.3,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "release_analysis",
-          schema: ANALYSIS_SCHEMA,
-          strict: true,
+    const response = await ai.run(
+      MODEL,
+      {
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
+        max_tokens: 300,
+        temperature: 0.3,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "release_analysis",
+            schema: ANALYSIS_SCHEMA,
+            strict: true,
+          },
         },
       },
-    });
+      buildAiRunOptions(gatewayId, repoName, tagName),
+    );
 
     if (!response || typeof response !== "object") {
       logger.ai.error("Invalid response format", undefined, {
@@ -129,6 +136,29 @@ export async function analyzeRelease(
     });
     return null;
   }
+}
+
+function buildAiRunOptions(
+  gatewayId: string | undefined,
+  repoName: string,
+  tagName: string,
+): AiOptions {
+  const id = gatewayId?.trim() || DEFAULT_AI_GATEWAY_ID;
+
+  return {
+    gateway: {
+      id,
+      skipCache: false,
+      cacheTtl: AI_GATEWAY_CACHE_TTL_SECONDS,
+      metadata: {
+        app: "release-watch",
+        feature: "release-analysis",
+        model: MODEL,
+        repo: repoName,
+        tag: tagName,
+      },
+    },
+  };
 }
 
 function buildReleaseAnalysisPrompt(

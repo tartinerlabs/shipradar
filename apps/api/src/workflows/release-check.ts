@@ -359,6 +359,7 @@ export class ReleaseCheckWorkflow extends WorkflowEntrypoint<
             async () => {
               return analyzeRelease(
                 this.env.AI,
+                this.env.AI_GATEWAY_ID,
                 repoFullName,
                 tagName,
                 releaseName,
