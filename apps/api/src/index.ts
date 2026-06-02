@@ -16,27 +16,30 @@ const app = new Hono();
 
 // Public routes (no auth)
 app.route("/", health);
-app.route("/", stats);
-app.route("/", webhook);
-app.route("/", internal);
+// app.route("/", stats);
+// app.route("/", webhook);
+// app.route("/", internal);
 
 // Authenticated API routes
-const api = new Hono<AuthEnv>()
-  // .use("*", jwtAuth)
-  .route("/", dashboard)
-  .route("/", repos)
-  .route("/", telegram)
-  .route("/", discord);
+// const api = new Hono<AuthEnv>()
+//   .use("*", jwtAuth)
+//   .route("/", dashboard)
+//   .route("/", repos)
+//   .route("/", telegram)
+//   .route("/", discord);
 
 // Admin routes
-const admin = new Hono<AuthEnv>()
-  .basePath("/admin")
-  // .use("*", jwtAuth)
-  // .use("*", adminOnly)
-  .route("/", adminUsers)
-  .route("/", adminActivity)
-  .route("/", adminStats);
+// const admin = new Hono<AuthEnv>()
+//   .basePath("/admin")
+//   .use("*", jwtAuth)
+//   .use("*", adminOnly)
+//   .route("/", adminUsers)
+//   .route("/", adminActivity)
+//   .route("/", adminStats);
 
-export const routes = app.route("/", api).route("/", admin);
+export const routes = app.route("/", api);
+// .route("/", admin);
 
+export type AppType = typeof app;
+export { app };
 export default app;
