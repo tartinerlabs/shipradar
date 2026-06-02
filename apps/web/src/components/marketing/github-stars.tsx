@@ -1,6 +1,6 @@
 import type { GitHubRepoResponse } from "@/lib/github";
 
-const REPO_OWNER = "ruchernchong";
+const REPO_OWNER = "tartinerlabs";
 const REPO_NAME = "shipradar";
 const STAR_THRESHOLD = 50;
 
