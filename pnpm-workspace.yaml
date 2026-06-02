@@ -3,17 +3,18 @@ packages:
   - packages/**
 
 allowBuilds:
-  "@sentry/cli": false
-  "@zowe/secrets-for-zowe-sdk": false
-  heroui-pro: true
-  "@heroui-pro/react": true
+  '@heroui-pro/react': true
+  '@nestjs/core': false
+  '@sentry/cli': false
+  '@swc/core': false
+  '@zowe/secrets-for-zowe-sdk': false
+  cbor-extract: false
   core-js: false
   esbuild: false
+  heroui-native-pro: true
+  heroui-pro: true
   sharp: false
   workerd: false
-  '@nestjs/core': false
-  '@swc/core': false
-  cbor-extract: false
 
 catalog:
   "@cloudflare/workers-types": 4.20260504.1
