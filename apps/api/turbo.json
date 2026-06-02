@@ -14,7 +14,7 @@
     },
     "bot:set-commands": {
       "cache": false,
-      "env": ["TELEGRAM_BOT_TOKEN"]
+      "passThroughEnv": ["TELEGRAM_BOT_TOKEN"]
     }
   }
 }

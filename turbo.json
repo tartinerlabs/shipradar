@@ -1,7 +1,25 @@
 {
   "$schema": "./node_modules/turbo/schema.json",
   "ui": "tui",
-  "globalPassThroughEnv": ["DATABASE_URL", "HEROUI_AUTH_TOKEN", "UPSTASH_*"],
+  "envMode": "strict",
+  "remoteCache": {
+    "signature": true
+  },
+  "globalDependencies": ["tsconfig.json", "biome.json", ".env"],
+  "globalEnv": ["NODE_ENV"],
+  "globalPassThroughEnv": [
+    "BETTER_AUTH_*",
+    "CRON_SECRET",
+    "DATABASE_URL",
+    "DATABASE_URL_UNPOOLED",
+    "DISCORD_*",
+    "GITHUB_*",
+    "GOOGLE_*",
+    "HEROUI_AUTH_TOKEN",
+    "POSTHOG_API_KEY",
+    "TELEGRAM_BOT_TOKEN",
+    "UPSTASH_*"
+  ],
   "tasks": {
     "dev": {
       "cache": false,
@@ -9,7 +27,6 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "preview": {},
