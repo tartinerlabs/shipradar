@@ -1,19 +1,17 @@
 "use client";
 
-import { SubscriptionSection } from "@web/components/settings/subscription-section";
-import { Avatar, AvatarFallback, AvatarImage } from "@web/components/ui/avatar";
-import { Button } from "@web/components/ui/button";
 import {
+  Avatar,
+  Button,
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@web/components/ui/card";
-import { Input } from "@web/components/ui/input";
-import { Label } from "@web/components/ui/label";
-import { Separator } from "@web/components/ui/separator";
-import { Switch } from "@web/components/ui/switch";
+  InputGroup,
+  Label,
+  Separator,
+  Switch,
+  TextField,
+  Typography,
+} from "@heroui/react";
+import { SubscriptionSection } from "@web/components/settings/subscription-section";
 import { useSession } from "@web/lib/auth-client";
 import { Bell, Download, Shield, Trash2, User, Zap } from "lucide-react";
 import { useState } from "react";
@@ -30,32 +28,21 @@ function SettingRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="group flex items-center justify-between gap-6 rounded-lg px-4 py-4 transition-colors hover:bg-muted/50">
+    <div className="flex items-center justify-between gap-6 py-4">
       <div className="flex items-center gap-4">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted transition-all group-hover:bg-background group-hover:shadow-sm">
-          <Icon className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label className="cursor-pointer font-medium">{label}</Label>
-          <p className="text-muted-foreground text-sm">{description}</p>
+        <Avatar>
+          <Avatar.Fallback>
+            <Icon className="size-4" />
+          </Avatar.Fallback>
+        </Avatar>
+        <div className="flex flex-col gap-1">
+          <Label>{label}</Label>
+          <Typography type="body-sm" color="muted">
+            {description}
+          </Typography>
         </div>
       </div>
       <div className="shrink-0">{children}</div>
-    </div>
-  );
-}
-
-function SectionHeader({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col gap-2 px-4">
-      <h3 className="font-semibold text-lg tracking-tight">{title}</h3>
-      <p className="text-muted-foreground text-sm">{description}</p>
     </div>
   );
 }
@@ -71,69 +58,69 @@ export function SettingsSection() {
   return (
     <>
       <div className="flex flex-col gap-2">
-        <h1 className="font-bold text-3xl tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
+        <Typography type="h1">Settings</Typography>
+        <Typography color="muted">
           Manage your account preferences and notification settings.
-        </p>
+        </Typography>
       </div>
 
       <div className="flex flex-col gap-8">
         {/* Profile Section */}
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b bg-muted/30">
-            <div className="flex items-center gap-4">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-primary/20 to-primary/5">
-                <User className="size-5 text-primary" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <CardTitle>Profile</CardTitle>
-                <CardDescription>
-                  Your personal information and account details.
-                </CardDescription>
-              </div>
+        <Card>
+          <Card.Header>
+            <Avatar>
+              <Avatar.Fallback>
+                <User className="size-5" />
+              </Avatar.Fallback>
+            </Avatar>
+            <div className="flex flex-col gap-2">
+              <Card.Title>Profile</Card.Title>
+              <Card.Description>
+                Your personal information and account details.
+              </Card.Description>
             </div>
-          </CardHeader>
-          <CardContent className="pt-6">
+          </Card.Header>
+          <Card.Content>
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
               <div className="flex flex-col items-center gap-4">
-                <Avatar className="size-20 ring-4 ring-muted">
-                  <AvatarImage src={user?.image ?? ""} alt={user?.name ?? ""} />
-                  <AvatarFallback className="font-semibold text-2xl">
+                <Avatar size="lg">
+                  {user?.image && (
+                    <Avatar.Image src={user.image} alt={user.name ?? ""} />
+                  )}
+                  <Avatar.Fallback>
                     {user?.name?.charAt(0).toUpperCase() ?? "U"}
-                  </AvatarFallback>
+                  </Avatar.Fallback>
                 </Avatar>
-                <Button variant="outline" size="sm" className="text-xs">
+                <Button variant="outline" size="sm">
                   Change photo
                 </Button>
               </div>
               <div className="flex flex-1 flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="name">Display name</Label>
-                  <Input
-                    id="name"
-                    defaultValue={user?.name ?? ""}
-                    placeholder="Your name"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="email">Email address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    defaultValue={user?.email ?? ""}
-                    disabled
-                    className="bg-muted/50"
-                  />
-                  <p className="text-muted-foreground text-xs">
+                <TextField defaultValue={user?.name ?? ""}>
+                  <Label>Display name</Label>
+                  <InputGroup>
+                    <InputGroup.Input placeholder="Your name" />
+                  </InputGroup>
+                </TextField>
+                <TextField
+                  defaultValue={user?.email ?? ""}
+                  isDisabled
+                  type="email"
+                >
+                  <Label>Email address</Label>
+                  <InputGroup>
+                    <InputGroup.Input />
+                  </InputGroup>
+                  <Typography type="body-xs" color="muted">
                     Email cannot be changed. Contact support for assistance.
-                  </p>
-                </div>
+                  </Typography>
+                </TextField>
               </div>
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className="flex justify-end">
               <Button>Save changes</Button>
             </div>
-          </CardContent>
+          </Card.Content>
         </Card>
 
         {/* Subscription Section */}
@@ -141,29 +128,33 @@ export function SettingsSection() {
 
         {/* Notifications Section */}
         <Card>
-          <CardHeader className="border-b bg-muted/30">
-            <div className="flex items-center gap-4">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-amber-500/20 to-orange-500/5">
-                <Bell className="size-5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <CardTitle>Notifications</CardTitle>
-                <CardDescription>
-                  Configure how and when you receive updates.
-                </CardDescription>
-              </div>
+          <Card.Header>
+            <Avatar>
+              <Avatar.Fallback>
+                <Bell className="size-5" />
+              </Avatar.Fallback>
+            </Avatar>
+            <div className="flex flex-col gap-2">
+              <Card.Title>Notifications</Card.Title>
+              <Card.Description>
+                Configure how and when you receive updates.
+              </Card.Description>
             </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2 pt-4">
+          </Card.Header>
+          <Card.Content>
             <SettingRow
               icon={Zap}
               label="Release notifications"
               description="Get notified immediately when a watched repo publishes a new release."
             >
               <Switch
-                checked={releaseNotifications}
-                onCheckedChange={setReleaseNotifications}
-              />
+                isSelected={releaseNotifications}
+                onChange={setReleaseNotifications}
+              >
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch>
             </SettingRow>
             <Separator />
             <SettingRow
@@ -171,10 +162,11 @@ export function SettingsSection() {
               label="Weekly digest"
               description="Receive a weekly summary of all releases from your watched repos."
             >
-              <Switch
-                checked={weeklyDigest}
-                onCheckedChange={setWeeklyDigest}
-              />
+              <Switch isSelected={weeklyDigest} onChange={setWeeklyDigest}>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch>
             </SettingRow>
             <Separator />
             <SettingRow
@@ -182,71 +174,81 @@ export function SettingsSection() {
               label="AI summaries"
               description="Include AI-generated summaries in release notifications."
             >
-              <Switch checked={aiSummaries} onCheckedChange={setAiSummaries} />
+              <Switch isSelected={aiSummaries} onChange={setAiSummaries}>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch>
             </SettingRow>
-          </CardContent>
+          </Card.Content>
         </Card>
 
         {/* Data & Privacy Section */}
         <Card>
-          <CardHeader className="border-b bg-muted/30">
-            <div className="flex items-center gap-4">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500/20 to-teal-500/5">
-                <Shield className="size-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <CardTitle>Data & Privacy</CardTitle>
-                <CardDescription>
-                  Manage your data and privacy preferences.
-                </CardDescription>
-              </div>
+          <Card.Header>
+            <Avatar>
+              <Avatar.Fallback>
+                <Shield className="size-5" />
+              </Avatar.Fallback>
+            </Avatar>
+            <div className="flex flex-col gap-2">
+              <Card.Title>Data & Privacy</Card.Title>
+              <Card.Description>
+                Manage your data and privacy preferences.
+              </Card.Description>
             </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-6 pt-6">
-            <div className="flex flex-col gap-4 rounded-lg border bg-muted/30 p-4">
-              <div className="flex items-start gap-4">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-background shadow-sm">
-                  <Download className="size-4 text-muted-foreground" />
-                </div>
-                <div className="flex flex-1 flex-col gap-2">
-                  <h4 className="font-medium">Export your data</h4>
-                  <p className="text-muted-foreground text-sm">
-                    Download a copy of your subscriptions and notification
-                    history.
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Export
-                </Button>
+          </Card.Header>
+          <Card.Content>
+            <div className="flex items-start gap-4">
+              <Avatar>
+                <Avatar.Fallback>
+                  <Download className="size-4" />
+                </Avatar.Fallback>
+              </Avatar>
+              <div className="flex flex-1 flex-col gap-1">
+                <Typography type="body-sm" weight="medium">
+                  Export your data
+                </Typography>
+                <Typography type="body-sm" color="muted">
+                  Download a copy of your subscriptions and notification
+                  history.
+                </Typography>
               </div>
+              <Button variant="outline" size="sm">
+                Export
+              </Button>
             </div>
 
             <Separator />
 
             <div className="flex flex-col gap-4">
-              <SectionHeader
-                title="Danger zone"
-                description="Irreversible actions that affect your account."
-              />
-              <div className="flex flex-col gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-                <div className="flex items-start gap-4">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10">
-                    <Trash2 className="size-4 text-destructive" />
-                  </div>
-                  <div className="flex flex-1 flex-col gap-2">
-                    <h4 className="font-medium">Delete account</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Permanently delete your account and all associated data.
-                      This action cannot be undone.
-                    </p>
-                  </div>
-                  <Button variant="destructive" size="sm">
-                    Delete
-                  </Button>
+              <div className="flex flex-col gap-2">
+                <Typography type="h6">Danger zone</Typography>
+                <Typography type="body-sm" color="muted">
+                  Irreversible actions that affect your account.
+                </Typography>
+              </div>
+              <div className="flex items-start gap-4 rounded-lg border border-danger/30 bg-danger/5 p-4">
+                <Avatar>
+                  <Avatar.Fallback>
+                    <Trash2 className="size-4 text-danger" />
+                  </Avatar.Fallback>
+                </Avatar>
+                <div className="flex flex-1 flex-col gap-1">
+                  <Typography type="body-sm" weight="medium">
+                    Delete account
+                  </Typography>
+                  <Typography type="body-sm" color="muted">
+                    Permanently delete your account and all associated data.
+                    This action cannot be undone.
+                  </Typography>
                 </div>
+                <Button variant="danger-soft" size="sm">
+                  Delete
+                </Button>
               </div>
             </div>
-          </CardContent>
+          </Card.Content>
         </Card>
       </div>
     </>

@@ -1,15 +1,8 @@
 "use client";
 
+import { Button, buttonVariants, Link, Modal, Typography } from "@heroui/react";
 import { generateTelegramCode } from "@web/app/(dashboard)/dashboard/integrations/actions";
-import { Button } from "@web/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@web/components/ui/dialog";
-import { Check, Copy, ExternalLink, Loader2 } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useState, useTransition } from "react";
 
 interface TelegramLinkDialogProps {
@@ -28,7 +21,6 @@ export function TelegramLinkDialog({
 
   const handleGenerateCode = () => {
     setError(null);
-
     startTransition(async () => {
       try {
         const data = await generateTelegramCode();
@@ -43,7 +35,6 @@ export function TelegramLinkDialog({
 
   const copyCode = async () => {
     if (!code) return;
-
     await navigator.clipboard.writeText(`/link ${code}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -59,84 +50,78 @@ export function TelegramLinkDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Link Telegram Account</DialogTitle>
-          <DialogDescription>
-            Connect your Telegram account to receive release notifications.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-4">
-          {!code ? (
-            <>
-              <p className="text-muted-foreground text-sm">
-                Generate a one-time code and send it to our Telegram bot to link
-                your account.
-              </p>
-              {error && <p className="text-destructive text-sm">{error}</p>}
-              <Button onClick={handleGenerateCode} disabled={isPending}>
-                {isPending ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  "Generate Link Code"
+    <Modal.Backdrop isOpen={open} onOpenChange={handleOpenChange}>
+      <Modal.Container>
+        <Modal.Dialog>
+          <Modal.CloseTrigger />
+          <Modal.Header>
+            <Modal.Heading>Link Telegram Account</Modal.Heading>
+          </Modal.Header>
+          <Modal.Body>
+            {!code && (
+              <>
+                <Typography type="body-sm" color="muted">
+                  Generate a one-time code and send it to our Telegram bot to
+                  link your account.
+                </Typography>
+                {error && (
+                  <Typography type="body-sm" className="text-danger">
+                    {error}
+                  </Typography>
                 )}
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="flex flex-col gap-2">
-                <p className="text-muted-foreground text-sm">
-                  Send this command to{" "}
-                  <a
-                    href="https://t.me/ShipRadar_Bot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-primary underline"
-                  >
-                    @ShipRadar_Bot
-                  </a>
-                  :
-                </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded-md bg-muted px-4 py-3 font-mono text-lg">
-                    /link {code}
-                  </code>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={copyCode}
-                    className="shrink-0"
-                  >
-                    {copied ? (
-                      <Check className="size-4" />
-                    ) : (
-                      <Copy className="size-4" />
-                    )}
-                  </Button>
+                <Button
+                  onPress={handleGenerateCode}
+                  isDisabled={isPending}
+                  isPending={isPending}
+                >
+                  Generate Link Code
+                </Button>
+              </>
+            )}
+            {code && (
+              <>
+                <div className="flex flex-col gap-2">
+                  <Typography type="body-sm" color="muted">
+                    Send this command to{" "}
+                    <Link
+                      href="https://t.me/ShipRadar_Bot"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      @ShipRadar_Bot
+                    </Link>
+                    :
+                  </Typography>
+                  <div className="flex items-center gap-2">
+                    <Typography.Code>/link {code}</Typography.Code>
+                    <Button
+                      isIconOnly
+                      variant="outline"
+                      aria-label="Copy code"
+                      onPress={copyCode}
+                    >
+                      {copied && <Check className="size-4" />}
+                      {!copied && <Copy className="size-4" />}
+                    </Button>
+                  </div>
+                  <Typography type="body-xs" color="muted">
+                    This code expires in 10 minutes.
+                  </Typography>
                 </div>
-                <p className="text-muted-foreground text-xs">
-                  This code expires in 10 minutes.
-                </p>
-              </div>
-              <Button variant="outline" asChild>
-                <a
+                <Link
                   href="https://t.me/ShipRadar_Bot"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className={buttonVariants({ variant: "outline" })}
                 >
-                  <ExternalLink className="size-4" />
                   Open Telegram Bot
-                </a>
-              </Button>
-            </>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+                  <Link.Icon />
+                </Link>
+              </>
+            )}
+          </Modal.Body>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

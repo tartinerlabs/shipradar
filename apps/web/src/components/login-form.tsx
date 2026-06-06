@@ -1,52 +1,27 @@
-"use client";
-
-import { Button } from "@web/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@web/components/ui/card";
-import { signIn } from "@web/lib/auth-client";
+import { Card, Typography } from "@heroui/react";
+import { LoginButtons } from "@web/components/login-buttons";
 import { cn } from "@web/lib/utils";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const handleGitHubSignIn = () => {
-    signIn.social({ provider: "github", callbackURL: "/dashboard" });
-  };
-
-  const handleGoogleSignIn = () => {
-    signIn.social({ provider: "google", callbackURL: "/dashboard" });
-  };
-
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>
+        <Card.Header>
+          <Card.Title>Welcome back</Card.Title>
+          <Card.Description>
             Sign in with your GitHub or Google account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            {/* TODO: Add GitHub and Google icons */}
-            <Button variant="outline" onClick={handleGitHubSignIn}>
-              Continue with GitHub
-            </Button>
-            <Button variant="outline" onClick={handleGoogleSignIn}>
-              Continue with Google
-            </Button>
-          </div>
-        </CardContent>
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <LoginButtons />
+        </Card.Content>
       </Card>
-      <p className="px-6 text-center text-muted-foreground text-sm">
+      <Typography type="body-sm" color="muted">
         By continuing, you agree to our Terms of Service and Privacy Policy.
-      </p>
+      </Typography>
     </div>
   );
 }

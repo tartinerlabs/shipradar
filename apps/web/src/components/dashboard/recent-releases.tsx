@@ -1,7 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@web/components/ui/card";
-import { Skeleton } from "@web/components/ui/skeleton";
+import { Card, Skeleton, Typography } from "@heroui/react";
 import { api } from "@web/lib/api-client";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { type Release, ReleaseCard } from "./release-card";
@@ -31,26 +30,28 @@ export function RecentReleases() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-lg">Recent Releases</h2>
-      </div>
+      <Typography type="h6">Recent Releases</Typography>
 
-      {isPending ? (
+      {isPending && (
         <div className="flex flex-col gap-4">
           <ReleaseCardSkeleton />
           <ReleaseCardSkeleton />
           <ReleaseCardSkeleton />
         </div>
-      ) : releases.length === 0 ? (
+      )}
+
+      {!isPending && releases.length === 0 && (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <p className="text-muted-foreground">No releases yet</p>
-            <p className="text-muted-foreground text-sm">
+          <Card.Content>
+            <Typography color="muted">No releases yet</Typography>
+            <Typography type="body-sm" color="muted">
               Subscribe to repositories to see their latest releases here.
-            </p>
-          </CardContent>
+            </Typography>
+          </Card.Content>
         </Card>
-      ) : (
+      )}
+
+      {!isPending && releases.length > 0 && (
         <div className="flex flex-col gap-4">
           {releases.map((release) => (
             <ReleaseCard
@@ -67,18 +68,18 @@ export function RecentReleases() {
 function ReleaseCardSkeleton() {
   return (
     <Card>
-      <CardContent className="flex flex-col gap-3 p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-4 w-20" />
-          </div>
-          <Skeleton className="h-5 w-16 rounded-full" />
+      <Card.Header>
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-20" />
         </div>
+        <Skeleton className="h-5 w-16 rounded-full" />
+      </Card.Header>
+      <Card.Content>
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-24" />
-      </CardContent>
+      </Card.Content>
     </Card>
   );
 }

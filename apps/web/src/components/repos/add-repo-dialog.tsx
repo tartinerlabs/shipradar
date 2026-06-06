@@ -1,25 +1,20 @@
 "use client";
 
+import {
+  Avatar,
+  Button,
+  InputGroup,
+  Label,
+  Link,
+  Modal,
+  Skeleton,
+  TextField,
+  Typography,
+} from "@heroui/react";
+import { NumberValue } from "@heroui-pro/react";
 import { createRepo } from "@web/app/(dashboard)/dashboard/repos/actions";
-import { Button } from "@web/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@web/components/ui/dialog";
-import { Input } from "@web/components/ui/input";
-import { Skeleton } from "@web/components/ui/skeleton";
 import type { GitHubLanguageColors, GitHubRepoResponse } from "@web/lib/github";
-import {
-  AlertCircle,
-  ExternalLink,
-  GitFork,
-  Github,
-  Loader2,
-  Star,
-} from "lucide-react";
+import { AlertCircle, GitFork, Github, Loader2, Star } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 interface AddRepoDialogProps {
@@ -36,16 +31,6 @@ interface RepoPreview {
   language: string | null;
   languageColor: string | null;
   url: string;
-}
-
-function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`;
-  }
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}k`;
-  }
-  return num.toString();
 }
 
 function parseRepoInput(input: string): string | null {
@@ -181,122 +166,116 @@ export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-foreground/5 ring-1 ring-foreground/10">
+    <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange}>
+      <Modal.Container>
+        <Modal.Dialog>
+          <Modal.CloseTrigger />
+          <Modal.Header>
+            <Modal.Icon>
               <Github className="size-5" />
-            </div>
-            <div>
-              <DialogTitle>Add Repository</DialogTitle>
-              <DialogDescription>
-                Watch a GitHub repository for new releases
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="relative">
-            <Input
-              ref={inputRef}
-              placeholder="owner/repo or GitHub URL"
-              value={repoInput}
-              onChange={(e) => setRepoInput(e.target.value)}
-              disabled={isSubmitting}
-              className="pr-9 font-mono text-sm"
-            />
-            {isFetching && (
-              <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-            )}
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 text-destructive text-sm">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {isFetching && !preview && (
-            <div className="flex flex-col gap-3 rounded-xl border bg-muted/20 p-4">
-              <div className="flex items-center gap-3">
-                <Skeleton className="size-10 rounded-lg" />
-                <div className="flex flex-col gap-1.5">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-3 w-44" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {preview && !isFetching && (
-            <div className="fade-in slide-in-from-top-1 flex animate-in flex-col gap-3 rounded-xl border bg-muted/20 p-4 duration-150">
-              <div className="flex items-start gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
-                  <Github className="size-4" />
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate font-medium font-mono text-sm">
-                      {preview.owner}/{preview.name}
-                    </span>
-                    <a
-                      href={preview.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      <ExternalLink className="size-3.5" />
-                    </a>
-                  </div>
-                  {preview.description && (
-                    <p className="line-clamp-2 text-muted-foreground text-xs">
-                      {preview.description}
-                    </p>
+            </Modal.Icon>
+            <Modal.Heading>Add Repository</Modal.Heading>
+          </Modal.Header>
+          <Modal.Body>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <TextField
+                value={repoInput}
+                onChange={setRepoInput}
+                isDisabled={isSubmitting}
+                aria-label="Repository"
+              >
+                <Label>Repository</Label>
+                <InputGroup>
+                  <InputGroup.Input
+                    ref={inputRef}
+                    placeholder="owner/repo or GitHub URL"
+                  />
+                  {isFetching && (
+                    <InputGroup.Suffix>
+                      <Loader2 className="size-4 animate-spin text-muted" />
+                    </InputGroup.Suffix>
                   )}
-                  <div className="flex items-center gap-3 pt-1 text-muted-foreground text-xs">
-                    <div className="flex items-center gap-1">
-                      <Star className="size-3 text-amber-500" />
-                      <span>{formatNumber(preview.stars)}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <GitFork className="size-3" />
-                      <span>{formatNumber(preview.forks)}</span>
-                    </div>
-                    {preview.language && (
-                      <div className="flex items-center gap-1">
-                        <span
-                          className="size-2 rounded-full"
-                          style={{
-                            backgroundColor: preview.languageColor || "#6b7280",
-                          }}
-                        />
-                        <span>{preview.language}</span>
-                      </div>
-                    )}
+                </InputGroup>
+              </TextField>
+
+              {error && (
+                <Typography type="body-sm" className="text-danger">
+                  <AlertCircle className="inline size-4" /> {error}
+                </Typography>
+              )}
+
+              {isFetching && !preview && (
+                <div className="flex items-center gap-3 rounded-xl border border-border p-4">
+                  <Skeleton className="size-10 rounded-lg" />
+                  <div className="flex flex-col gap-1.5">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-3 w-44" />
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
 
-          <Button
-            type="submit"
-            disabled={!preview || isFetching || isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Adding...
-              </>
-            ) : (
-              "Add Repository"
-            )}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+              {preview && !isFetching && (
+                <div className="flex items-start gap-3 rounded-xl border border-border p-4">
+                  <Avatar>
+                    <Avatar.Fallback>
+                      <Github className="size-4" />
+                    </Avatar.Fallback>
+                  </Avatar>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <Typography.Code>
+                        {preview.owner}/{preview.name}
+                      </Typography.Code>
+                      <Link
+                        href={preview.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Link.Icon />
+                      </Link>
+                    </div>
+                    {preview.description && (
+                      <Typography type="body-xs" color="muted" truncate>
+                        {preview.description}
+                      </Typography>
+                    )}
+                    <div className="flex items-center gap-3 pt-1">
+                      <Typography type="body-xs" color="muted">
+                        <Star className="inline size-3 text-warning" />{" "}
+                        <NumberValue value={preview.stars} notation="compact" />
+                      </Typography>
+                      <Typography type="body-xs" color="muted">
+                        <GitFork className="inline size-3" />{" "}
+                        <NumberValue value={preview.forks} notation="compact" />
+                      </Typography>
+                      {preview.language && (
+                        <Typography type="body-xs" color="muted">
+                          <span
+                            className="mr-1 inline-block size-2 rounded-full align-middle"
+                            style={{
+                              backgroundColor:
+                                preview.languageColor || "#6b7280",
+                            }}
+                          />
+                          {preview.language}
+                        </Typography>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                isDisabled={!preview || isFetching || isSubmitting}
+                isPending={isSubmitting}
+              >
+                Add Repository
+              </Button>
+            </form>
+          </Modal.Body>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }
