@@ -1,87 +1,46 @@
 "use server";
 
-import { getApi } from "@web/lib/api";
-import { revalidatePath } from "next/cache";
+const API_DISABLED_ERROR = "API is temporarily disabled";
 
 // Telegram Actions
 
-export async function generateTelegramCode() {
-  const api = await getApi();
-  const res = await api.channels.telegram.generate.$post();
-
-  if (!res.ok) {
-    throw new Error("Failed to generate Telegram link code");
-  }
-
-  return res.json();
+// TODO: Restore API-backed Telegram link code generation once the API is healthy again.
+export async function generateTelegramCode(): Promise<{ code: string }> {
+  throw new Error(API_DISABLED_ERROR);
 }
 
-export async function toggleTelegramChannel(chatId: string, enabled: boolean) {
-  const api = await getApi();
-  const res = await api.channels.telegram.toggle.$patch({
-    json: { chatId, enabled },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to toggle Telegram channel");
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/integrations");
-  return res.json();
+// TODO: Restore API-backed Telegram channel toggling once the API is healthy again.
+export async function toggleTelegramChannel(
+  _chatId: string,
+  _enabled: boolean,
+): Promise<{ success: true; enabled: boolean }> {
+  throw new Error(API_DISABLED_ERROR);
 }
 
 // Discord Actions
 
+// TODO: Restore API-backed Discord channel creation once the API is healthy again.
 export async function addDiscordChannel(data: {
   guildId: string;
   guildName: string;
   channelId: string;
   channelName: string;
-}) {
-  const api = await getApi();
-  const res = await api.channels.discord.channels.$post({
-    json: data,
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to add Discord channel");
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/integrations");
-  return res.json();
+}): Promise<{ success: true }> {
+  void data;
+  throw new Error(API_DISABLED_ERROR);
 }
 
-export async function removeDiscordChannel(channelId: string) {
-  const api = await getApi();
-  const res = await api.channels.discord.channels[":channelId"].$delete({
-    param: { channelId },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to remove Discord channel");
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/integrations");
-  return res.json();
+// TODO: Restore API-backed Discord channel removal once the API is healthy again.
+export async function removeDiscordChannel(
+  _channelId: string,
+): Promise<{ success: true }> {
+  throw new Error(API_DISABLED_ERROR);
 }
 
+// TODO: Restore API-backed Discord channel toggling once the API is healthy again.
 export async function toggleDiscordChannel(
-  channelId: string,
-  enabled: boolean,
-) {
-  const api = await getApi();
-  const res = await api.channels.discord.toggle.$patch({
-    json: { channelId, enabled },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to toggle Discord channel");
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/integrations");
-  return res.json();
+  _channelId: string,
+  _enabled: boolean,
+): Promise<{ success: true; enabled: boolean }> {
+  throw new Error(API_DISABLED_ERROR);
 }

@@ -1,50 +1,23 @@
 "use server";
 
-import { getApi } from "@web/lib/api";
-import { revalidatePath } from "next/cache";
+import type { Repo } from "@web/lib/data/repos";
 
-export async function createRepo(repoName: string) {
-  const api = await getApi();
-  const res = await api.repos.$post({
-    json: { repoName },
-  });
+const API_DISABLED_ERROR = "API is temporarily disabled";
 
-  if (!res.ok) {
-    const { error } = await res.json();
-    throw new Error(error || "Failed to add repository");
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/repos");
-  return res.json();
+// TODO: Restore API-backed repository creation once the API is healthy again.
+export async function createRepo(_repoName: string): Promise<{ repo: Repo }> {
+  throw new Error(API_DISABLED_ERROR);
 }
 
-export async function deleteRepo(id: string) {
-  const api = await getApi();
-  const res = await api.repos[":id"].$delete({
-    param: { id },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to delete repository");
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/repos");
-  return res.json();
+// TODO: Restore API-backed repository deletion once the API is healthy again.
+export async function deleteRepo(_id: string): Promise<{ success: true }> {
+  throw new Error(API_DISABLED_ERROR);
 }
 
-export async function toggleRepoPause(id: string, paused: boolean) {
-  const api = await getApi();
-  const res = await api.repos[":id"].pause.$patch({
-    param: { id },
-    json: { paused },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to update repository status");
-  }
-
-  revalidatePath("/dashboard/repos");
-  return res.json();
+// TODO: Restore API-backed repository pause toggling once the API is healthy again.
+export async function toggleRepoPause(
+  _id: string,
+  _paused: boolean,
+): Promise<{ repo: Repo }> {
+  throw new Error(API_DISABLED_ERROR);
 }

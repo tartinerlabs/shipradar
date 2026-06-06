@@ -1,5 +1,4 @@
 import type { Release } from "@web/components/dashboard/release-card";
-import { getApi } from "@web/lib/api";
 
 export interface DashboardStats {
   reposWatched: number;
@@ -7,27 +6,18 @@ export interface DashboardStats {
   totalChannels: number;
 }
 
+// TODO: Restore API-backed dashboard stats once the API is healthy again.
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const api = await getApi();
-  const res = await api.dashboard.stats.$get();
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch dashboard stats");
-  }
-
-  return res.json() as Promise<DashboardStats>;
+  return {
+    reposWatched: 0,
+    activeChannels: 0,
+    totalChannels: 0,
+  };
 }
 
-export async function getReleases(limit = 5): Promise<{ releases: Release[] }> {
-  const api = await getApi();
-  const res = await api.dashboard.releases.$get({
-    query: { limit: limit.toString() },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch releases");
-  }
-
-  const data = await res.json();
-  return { releases: data.releases as Release[] };
+// TODO: Restore API-backed release data once the API is healthy again.
+export async function getReleases(
+  _limit = 5,
+): Promise<{ releases: Release[] }> {
+  return { releases: [] };
 }

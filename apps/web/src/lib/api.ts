@@ -1,33 +1,6 @@
-import type { AppType } from "@shipradar/api/types";
-import { hc } from "hono/client";
-import { headers } from "next/headers";
-import { auth } from "./auth";
+const API_DISABLED_ERROR = "API is temporarily disabled";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
-
-async function getToken(): Promise<string> {
-  const response = await auth.api.getToken({
-    headers: await headers(),
-  });
-
-  if (!response?.token) {
-    throw new Error("Not authenticated");
-  }
-
-  return response.token;
-}
-
+// TODO: Re-enable the Hono RPC client once the API package is healthy again.
 export async function getApi() {
-  const token = await getToken();
-
-  return hc<AppType>(API_BASE, {
-    fetch: (input: RequestInfo | URL, init?: RequestInit) =>
-      fetch(input, {
-        ...init,
-        headers: {
-          ...init?.headers,
-          Authorization: `Bearer ${token}`,
-        },
-      }),
-  });
+  throw new Error(API_DISABLED_ERROR);
 }

@@ -1,5 +1,3 @@
-import { getApi } from "@web/lib/api";
-
 export interface Repo {
   id: string;
   repoName: string;
@@ -8,14 +6,7 @@ export interface Repo {
   createdAt: string;
 }
 
+// TODO: Restore API-backed repository data once the API is healthy again.
 export async function getRepos(): Promise<{ repos: Repo[] }> {
-  const api = await getApi();
-  const res = await api.repos.$get();
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch repos");
-  }
-
-  const data = await res.json();
-  return data as { repos: Repo[] };
+  return { repos: [] };
 }

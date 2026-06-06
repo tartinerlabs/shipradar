@@ -1,5 +1,3 @@
-import { getApi } from "@web/lib/api";
-
 export interface DiscordChannel {
   channelId: string;
   channelName: string;
@@ -21,48 +19,22 @@ export interface GuildChannel {
   parentId: string | null;
 }
 
+// TODO: Restore API-backed Telegram status once the API is healthy again.
 export async function getTelegramStatus() {
-  const api = await getApi();
-  const res = await api.channels.telegram.status.$get();
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch Telegram status");
-  }
-
-  return res.json();
+  return { linked: false };
 }
 
+// TODO: Restore API-backed Discord status once the API is healthy again.
 export async function getDiscordStatus() {
-  const api = await getApi();
-  const res = await api.channels.discord.status.$get();
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch Discord status");
-  }
-
-  return res.json();
+  return { connected: false, channels: [] as DiscordChannel[] };
 }
 
+// TODO: Restore API-backed Discord guilds once the API is healthy again.
 export async function getDiscordGuilds() {
-  const api = await getApi();
-  const res = await api.channels.discord.guilds.$get();
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch Discord guilds");
-  }
-
-  return res.json();
+  return { guilds: [] as DiscordGuild[] };
 }
 
-export async function getDiscordGuildChannels(guildId: string) {
-  const api = await getApi();
-  const res = await api.channels.discord.guilds[":guildId"].channels.$get({
-    param: { guildId },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch guild channels");
-  }
-
-  return res.json();
+// TODO: Restore API-backed Discord guild channels once the API is healthy again.
+export async function getDiscordGuildChannels(_guildId: string) {
+  return { channels: [] as GuildChannel[] };
 }
