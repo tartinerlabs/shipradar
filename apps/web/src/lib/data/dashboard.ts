@@ -8,6 +8,7 @@ export interface DashboardStats {
 
 // TODO: Restore API-backed dashboard stats once the API is healthy again.
 export async function getDashboardStats(): Promise<DashboardStats> {
+  "use cache: private";
   return {
     reposWatched: 0,
     activeChannels: 0,
@@ -19,5 +20,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 export async function getReleases(
   _limit = 5,
 ): Promise<{ releases: Release[] }> {
+  "use cache: private";
   return { releases: [] };
 }
