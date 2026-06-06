@@ -31,7 +31,7 @@ export function DashboardLayoutContent({ children }: { children: ReactNode }) {
         </Navbar>
       }
     >
-      <div className="flex flex-1 flex-col gap-6 px-4 pt-8 pb-6">
+      <div className="container mx-auto flex flex-col gap-6 px-4 py-8">
         {children}
       </div>
     </AppLayout>
