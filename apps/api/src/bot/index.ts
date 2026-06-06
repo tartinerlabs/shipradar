@@ -400,7 +400,13 @@ export function createBot(): Bot {
     }
 
     try {
-      const octokit = createOctokit(process.env.GITHUB_TOKEN as string);
+      const githubToken = process.env.GITHUB_TOKEN;
+      if (!githubToken) {
+        await ctx.reply("Server configuration error: missing GITHUB_TOKEN.");
+        return;
+      }
+
+      const octokit = createOctokit(githubToken);
       await octokit.repos.get({ owner: parsed.owner, repo: parsed.repo });
     } catch {
       await ctx.reply(`Repository not found on GitHub: ${repo}`);
