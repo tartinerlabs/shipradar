@@ -45,8 +45,8 @@ export function AppSidebar() {
   const user = session?.user;
   const isAdmin = user?.role === "admin";
 
-  return (
-    <Sidebar>
+  const sidebarContent = (
+    <>
       <Sidebar.Header>
         <Link
           href="/dashboard"
@@ -107,6 +107,16 @@ export function AppSidebar() {
       <Sidebar.Footer>
         <UserMenu />
       </Sidebar.Footer>
-    </Sidebar>
+    </>
+  );
+
+  return (
+    <>
+      <Sidebar>
+        {sidebarContent}
+        <Sidebar.Rail />
+      </Sidebar>
+      <Sidebar.Mobile>{sidebarContent}</Sidebar.Mobile>
+    </>
   );
 }
