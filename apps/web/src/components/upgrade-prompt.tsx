@@ -1,10 +1,16 @@
 "use client";
 
-import { Badge } from "@web/components/ui/badge";
-import { Button } from "@web/components/ui/button";
-import { Progress } from "@web/components/ui/progress";
+import {
+  Avatar,
+  Button,
+  buttonVariants,
+  Card,
+  Chip,
+  ProgressBar,
+  Typography,
+} from "@heroui/react";
 import { Crown, X } from "lucide-react";
-import Link from "next/link";
+import NextLink from "next/link";
 import { useState } from "react";
 
 interface UpgradePromptProps {
@@ -31,55 +37,56 @@ export function UpgradePrompt({
   if (!isNearLimit) return null;
 
   return (
-    <div className="relative flex flex-col gap-4 rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-4">
-      {dismissible && (
-        <button
-          type="button"
-          onClick={() => setDismissed(true)}
-          className="absolute top-3 right-3 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <X className="size-4" />
-        </button>
-      )}
-
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <Crown className="size-5 text-primary" />
-        </div>
-        <div className="flex flex-col gap-1">
+    <Card>
+      <Card.Header>
+        <Avatar>
+          <Avatar.Fallback>
+            <Crown className="size-5" />
+          </Avatar.Fallback>
+        </Avatar>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex items-center gap-2">
-            <h4 className="font-medium">
+            <Typography type="body-sm" weight="medium">
               {isAtLimit
                 ? `${label} limit reached`
                 : `Approaching ${label} limit`}
-            </h4>
-            <Badge
-              variant={isAtLimit ? "destructive" : "secondary"}
-              className="text-xs"
+            </Typography>
+            <Chip
+              color={isAtLimit ? "danger" : "default"}
+              variant="soft"
+              size="sm"
             >
-              {current}/{limit}
-            </Badge>
+              <Chip.Label>
+                {current}/{limit}
+              </Chip.Label>
+            </Chip>
           </div>
-          <p className="text-muted-foreground text-sm">
+          <Typography type="body-sm" color="muted">
             {isAtLimit
               ? `You've reached your ${label} limit. Upgrade to Pro for unlimited access.`
               : `You're using ${current} of ${limit} ${label}. Upgrade to Pro for unlimited access.`}
-          </p>
+          </Typography>
         </div>
-      </div>
-
-      <Progress value={percentage} className="h-2" />
-
-      <div className="flex gap-3">
-        <Button size="sm" asChild>
-          <Link href="/pricing">Upgrade to Pro</Link>
-        </Button>
-        {/* TODO(stripe): re-enable the quick-checkout CTA once billing is wired up.
-            This linked to Polar's /api/auth/checkout/pro-monthly route.
-        <Button size="sm" variant="ghost" asChild>
-          <a href="/api/auth/checkout/pro-monthly">$3/mo →</a>
-        </Button> */}
-      </div>
-    </div>
+        {dismissible && (
+          <Button
+            isIconOnly
+            variant="ghost"
+            size="sm"
+            aria-label="Dismiss"
+            onPress={() => setDismissed(true)}
+          >
+            <X className="size-4" />
+          </Button>
+        )}
+      </Card.Header>
+      <Card.Content>
+        <ProgressBar value={percentage} />
+      </Card.Content>
+      <Card.Footer>
+        <NextLink href="/pricing" className={buttonVariants({ size: "sm" })}>
+          Upgrade to Pro
+        </NextLink>
+      </Card.Footer>
+    </Card>
   );
 }

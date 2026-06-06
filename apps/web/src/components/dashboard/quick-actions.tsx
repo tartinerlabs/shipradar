@@ -1,14 +1,8 @@
 "use client";
 
+import { Card, Typography } from "@heroui/react";
 import { TelegramLinkDialog } from "@web/components/integrations/telegram-link-dialog";
 import { AddRepoForm } from "@web/components/repos/add-repo-form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@web/components/ui/card";
 import { api } from "@web/lib/api-client";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { IntegrationToggle } from "./integration-toggle";
@@ -55,19 +49,19 @@ export function QuickActions() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="font-semibold text-lg">Quick Actions</h2>
+      <Typography type="h6">Quick Actions</Typography>
 
       <div className="grid gap-4 md:grid-cols-2">
         <AddRepoForm />
 
         <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base">Integrations</CardTitle>
-            <CardDescription className="text-xs">
+          <Card.Header>
+            <Card.Title>Integrations</Card.Title>
+            <Card.Description>
               Manage your notification channels
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
+            </Card.Description>
+          </Card.Header>
+          <Card.Content>
             <IntegrationToggle
               type="telegram"
               linked={telegramLinked}
@@ -80,7 +74,7 @@ export function QuickActions() {
                 }
               }}
             />
-          </CardContent>
+          </Card.Content>
         </Card>
       </div>
 

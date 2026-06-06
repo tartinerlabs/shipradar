@@ -2,7 +2,6 @@
 @import "@heroui/styles";
 @import "@heroui-pro/react/css";
 @import "@heroui-pro/react/themes/glass";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 

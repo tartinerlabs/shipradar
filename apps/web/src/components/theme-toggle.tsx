@@ -1,19 +1,12 @@
 "use client";
 
-import { Button } from "@web/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@web/components/ui/dropdown-menu";
-import { cn } from "@web/lib/utils";
+import { Button, Dropdown, Label } from "@heroui/react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { type Key, useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -22,9 +15,8 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" disabled>
+      <Button isIconOnly aria-label="Toggle theme" variant="ghost" isDisabled>
         <span className="size-4" />
-        <span className="sr-only">Toggle theme</span>
       </Button>
     );
   }
@@ -32,55 +24,29 @@ export function ThemeToggle() {
   const isDark = resolvedTheme === "dark";
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative overflow-hidden"
+    <Dropdown>
+      <Button isIconOnly aria-label="Toggle theme" variant="ghost">
+        {isDark ? <Moon className="size-4" /> : <Sun className="size-4" />}
+      </Button>
+      <Dropdown.Popover className="min-w-40">
+        <Dropdown.Menu
+          aria-label="Theme"
+          onAction={(key: Key) => setTheme(key as string)}
         >
-          <Sun
-            className={cn(
-              "absolute size-4 transition-all duration-300 ease-out",
-              isDark
-                ? "rotate-90 scale-0 opacity-0"
-                : "rotate-0 scale-100 opacity-100",
-            )}
-          />
-          <Moon
-            className={cn(
-              "absolute size-4 transition-all duration-300 ease-out",
-              isDark
-                ? "rotate-0 scale-100 opacity-100"
-                : "-rotate-90 scale-0 opacity-0",
-            )}
-          />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[140px]">
-        <DropdownMenuItem
-          onClick={() => setTheme("light")}
-          className={cn(theme === "light" && "bg-accent")}
-        >
-          <Sun className="size-4" />
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme("dark")}
-          className={cn(theme === "dark" && "bg-accent")}
-        >
-          <Moon className="size-4" />
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme("system")}
-          className={cn(theme === "system" && "bg-accent")}
-        >
-          <Monitor className="size-4" />
-          System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <Dropdown.Item id="light" textValue="Light">
+            <Sun className="size-4 text-muted" />
+            <Label>Light</Label>
+          </Dropdown.Item>
+          <Dropdown.Item id="dark" textValue="Dark">
+            <Moon className="size-4 text-muted" />
+            <Label>Dark</Label>
+          </Dropdown.Item>
+          <Dropdown.Item id="system" textValue="System">
+            <Monitor className="size-4 text-muted" />
+            <Label>System</Label>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
   );
 }

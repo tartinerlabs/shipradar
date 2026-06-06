@@ -1,24 +1,24 @@
 "use client";
 
-import { Button } from "@web/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@web/components/ui/dialog";
-import { Label } from "@web/components/ui/label";
-import {
+  Button,
+  buttonVariants,
+  Label,
+  Link,
+  ListBox,
+  Modal,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@web/components/ui/select";
+  Typography,
+} from "@heroui/react";
 import { api } from "@web/lib/api-client";
-import { ExternalLink, Hash, Loader2, RefreshCw, Server } from "lucide-react";
-import { useEffect, useEffectEvent, useState, useTransition } from "react";
+import { Hash, RefreshCw, Server } from "lucide-react";
+import {
+  type Key,
+  useEffect,
+  useEffectEvent,
+  useState,
+  useTransition,
+} from "react";
 
 interface Guild {
   id: string;
@@ -111,7 +111,9 @@ export function DiscordChannelDialog({
     });
   };
 
-  const handleGuildSelect = (guildId: string) => {
+  const handleGuildSelect = (key: Key | null) => {
+    if (key === null) return;
+    const guildId = String(key);
     const guild = guilds.find((selectedGuild) => selectedGuild.id === guildId);
     setSelectedGuild(guild ?? null);
     setSelectedChannel(null);
@@ -128,7 +130,9 @@ export function DiscordChannelDialog({
     }
   };
 
-  const handleChannelSelect = (channelId: string) => {
+  const handleChannelSelect = (key: Key | null) => {
+    if (key === null) return;
+    const channelId = String(key);
     const channel = channels.find(
       (selectedChannel) => selectedChannel.id === channelId,
     );
@@ -167,121 +171,133 @@ export function DiscordChannelDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Select Discord Channel</DialogTitle>
-          <DialogDescription>
-            Choose a server and channel for release notifications.
-          </DialogDescription>
-        </DialogHeader>
+    <Modal.Backdrop isOpen={open} onOpenChange={handleOpenChange}>
+      <Modal.Container>
+        <Modal.Dialog>
+          <Modal.CloseTrigger />
+          <Modal.Header>
+            <Modal.Heading>Select Discord Channel</Modal.Heading>
+          </Modal.Header>
+          <Modal.Body>
+            {error && !inviteUrl && (
+              <Typography type="body-sm" className="text-danger">
+                {error}
+              </Typography>
+            )}
 
-        <div className="flex flex-col gap-4">
-          {error && !inviteUrl && (
-            <p className="text-destructive text-sm">{error}</p>
-          )}
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="server-select">Server</Label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-end gap-2">
               <Select
-                value={selectedGuild?.id}
-                onValueChange={handleGuildSelect}
-                disabled={isPending}
+                selectedKey={selectedGuild?.id ?? null}
+                onSelectionChange={handleGuildSelect}
+                isDisabled={isPending}
+                placeholder="Select a server"
               >
-                <SelectTrigger id="server-select" className="flex-1">
-                  <SelectValue placeholder="Select a server" />
-                </SelectTrigger>
-                <SelectContent>
-                  {guilds.map((guild) => (
-                    <SelectItem key={guild.id} value={guild.id}>
-                      <div className="flex items-center gap-2">
+                <Label>Server</Label>
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    {guilds.map((guild) => (
+                      <ListBox.Item
+                        key={guild.id}
+                        id={guild.id}
+                        textValue={guild.name}
+                      >
                         <Server className="size-4" />
-                        {guild.name}
+                        <Label>{guild.name}</Label>
                         {!guild.botPresent && (
-                          <span className="text-muted-foreground text-xs">
+                          <Typography type="body-xs" color="muted">
                             (Bot not added)
-                          </span>
+                          </Typography>
                         )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
               </Select>
               <Button
+                isIconOnly
                 variant="outline"
-                size="icon"
-                onClick={fetchGuilds}
-                disabled={isPending}
-              >
-                <RefreshCw
-                  className={`size-4 ${isPending ? "animate-spin" : ""}`}
-                />
-              </Button>
-            </div>
-          </div>
-
-          {inviteUrl && (
-            <div className="flex flex-col gap-2 rounded-lg border bg-muted/50 p-4">
-              <p className="text-muted-foreground text-sm">
-                The ShipRadar bot needs to be added to this server.
-              </p>
-              <Button variant="outline" asChild>
-                <a href={inviteUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="size-4" />
-                  Add Bot to Server
-                </a>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => selectedGuild && fetchChannels(selectedGuild.id)}
+                aria-label="Refresh servers"
+                onPress={fetchGuilds}
+                isDisabled={isPending}
               >
                 <RefreshCw className="size-4" />
-                I've added the bot
               </Button>
             </div>
-          )}
 
-          {selectedGuild?.botPresent && channels.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="channel-select">Channel</Label>
+            {inviteUrl && (
+              <div className="flex flex-col gap-2 rounded-lg border border-separator bg-surface-secondary p-4">
+                <Typography type="body-sm" color="muted">
+                  The ShipRadar bot needs to be added to this server.
+                </Typography>
+                <Link
+                  href={inviteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonVariants({ variant: "outline" })}
+                >
+                  Add Bot to Server
+                  <Link.Icon />
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onPress={() =>
+                    selectedGuild && fetchChannels(selectedGuild.id)
+                  }
+                >
+                  <RefreshCw className="size-4" />
+                  I've added the bot
+                </Button>
+              </div>
+            )}
+
+            {selectedGuild?.botPresent && channels.length > 0 && (
               <Select
-                value={selectedChannel?.id}
-                onValueChange={handleChannelSelect}
-                disabled={isPending}
+                selectedKey={selectedChannel?.id ?? null}
+                onSelectionChange={handleChannelSelect}
+                isDisabled={isPending}
+                placeholder="Select a channel"
               >
-                <SelectTrigger id="channel-select">
-                  <SelectValue placeholder="Select a channel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {channels.map((channel) => (
-                    <SelectItem key={channel.id} value={channel.id}>
-                      <div className="flex items-center gap-2">
+                <Label>Channel</Label>
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    {channels.map((channel) => (
+                      <ListBox.Item
+                        key={channel.id}
+                        id={channel.id}
+                        textValue={channel.name}
+                      >
                         <Hash className="size-4" />
-                        {channel.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                        <Label>{channel.name}</Label>
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
               </Select>
-            </div>
-          )}
+            )}
 
-          {selectedChannel && (
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Channel"
-              )}
-            </Button>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            {selectedChannel && (
+              <Button
+                onPress={handleSave}
+                isDisabled={isSaving}
+                isPending={isSaving}
+              >
+                Save Channel
+              </Button>
+            )}
+          </Modal.Body>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

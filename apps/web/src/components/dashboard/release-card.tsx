@@ -1,5 +1,5 @@
+import { Card, Typography } from "@heroui/react";
 import type { AIAnalysisResult } from "@shipradar/types";
-import { Card, CardContent, CardHeader } from "@web/components/ui/card";
 import { ExternalLink } from "lucide-react";
 import { CategoryBadge } from "./category-badge";
 
@@ -18,63 +18,65 @@ interface ReleaseCardProps {
 }
 
 export function ReleaseCard({ release }: ReleaseCardProps) {
-  const timeAgo = release.publishedAt
-    ? formatTimeAgo(release.publishedAt)
-    : null;
+  const timeAgo = release.publishedAt && formatTimeAgo(release.publishedAt);
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-md">
-      <CardHeader className="flex flex-row items-start justify-between gap-4 pb-2">
+    <Card>
+      <Card.Header>
         <div className="flex flex-col gap-1">
           <a
             href={release.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-2 font-medium hover:underline"
+            className="group flex items-center gap-2 hover:underline"
           >
-            <span>{release.repoName}</span>
+            <Typography type="body-sm" weight="medium">
+              {release.repoName}
+            </Typography>
             <ExternalLink className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
           </a>
-          <code className="font-mono text-muted-foreground text-sm">
-            {release.tagName}
-          </code>
+          <Typography.Code>{release.tagName}</Typography.Code>
         </div>
         {release.aiAnalysis && (
           <CategoryBadge category={release.aiAnalysis.category} />
         )}
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        {release.aiAnalysis ? (
+      </Card.Header>
+      <Card.Content>
+        {release.aiAnalysis && (
           <>
-            <p className="text-muted-foreground text-sm leading-relaxed">
+            <Typography type="body-sm" color="muted">
               {release.aiAnalysis.summary}
-            </p>
+            </Typography>
             {release.aiAnalysis.highlights.length > 0 && (
-              <ul className="flex flex-col gap-1 text-muted-foreground text-sm">
+              <ul className="flex flex-col gap-1">
                 {release.aiAnalysis.highlights.slice(0, 3).map((highlight) => (
-                  <li key={highlight} className="flex items-start gap-2">
-                    <span className="text-primary">•</span>
-                    <span>{highlight}</span>
+                  <li key={highlight}>
+                    <Typography type="body-sm" color="muted">
+                      • {highlight}
+                    </Typography>
                   </li>
                 ))}
               </ul>
             )}
           </>
-        ) : (
-          <p className="text-muted-foreground text-sm italic">
+        )}
+        {!release.aiAnalysis && (
+          <Typography type="body-sm" color="muted">
             No AI analysis available
-          </p>
+          </Typography>
         )}
         {(timeAgo || release.author) && (
-          <p className="text-muted-foreground text-xs">
-            {timeAgo && <span>Published {timeAgo}</span>}
-            {timeAgo && release.author && <span> by </span>}
+          <Typography type="body-xs" color="muted">
+            {timeAgo && <>Published {timeAgo}</>}
+            {timeAgo && release.author && <> by </>}
             {release.author && (
-              <span className="font-medium">{release.author}</span>
+              <Typography type="body-xs" weight="medium">
+                {release.author}
+              </Typography>
             )}
-          </p>
+          </Typography>
         )}
-      </CardContent>
+      </Card.Content>
     </Card>
   );
 }

@@ -1,12 +1,6 @@
+import { Card, Typography } from "@heroui/react";
 import { AddRepoForm } from "@web/components/repos/add-repo-form";
 import { ReposTable } from "@web/components/repos/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@web/components/ui/card";
 import { getRepos } from "@web/lib/data/repos";
 
 export default async function ReposPage() {
@@ -15,25 +9,25 @@ export default async function ReposPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="font-bold text-3xl">Repositories</h1>
-        <p className="text-muted-foreground">
+        <Typography type="h1">Repositories</Typography>
+        <Typography color="muted">
           Repositories you're watching for new releases.
-        </p>
+        </Typography>
       </div>
 
       <AddRepoForm />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Watched Repositories</CardTitle>
-          <CardDescription>
+        <Card.Header>
+          <Card.Title>Watched Repositories</Card.Title>
+          <Card.Description>
             You'll receive notifications when these repositories publish new
             releases.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
           <ReposTable initialRepos={repos} />
-        </CardContent>
+        </Card.Content>
       </Card>
     </div>
   );

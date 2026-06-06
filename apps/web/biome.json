@@ -13,7 +13,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!!**/components/ui", "!!**/lib/utils.ts"]
+    "includes": ["**"]
   },
   "formatter": {
     "enabled": true,

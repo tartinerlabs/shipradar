@@ -1,24 +1,22 @@
 "use client";
 
-import { Button } from "@web/components/ui/button";
 import {
+  Avatar,
+  Button,
+  buttonVariants,
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@web/components/ui/card";
-import { Switch } from "@web/components/ui/switch";
+  Chip,
+  Link,
+  Switch,
+  Typography,
+} from "@heroui/react";
 import { useNotifications } from "@web/hooks/use-notifications";
 import { api } from "@web/lib/api-client";
 import { signIn } from "@web/lib/auth-client";
 import {
   Bell,
   BellOff,
-  Check,
-  ExternalLink,
   Hash,
-  Loader2,
   MessageCircle,
   Plus,
   Send,
@@ -135,73 +133,70 @@ export function IntegrationsSection() {
   return (
     <>
       <div className="flex flex-col gap-2">
-        <h1 className="font-bold text-3xl">Integrations</h1>
-        <p className="text-muted-foreground">
+        <Typography type="h1">Integrations</Typography>
+        <Typography color="muted">
           Connect your notification channels to receive release updates.
-        </p>
+        </Typography>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-[#0088cc]">
-                <Send className="size-5 text-white" />
-              </div>
-              <div className="flex flex-1 flex-col gap-2">
-                <CardTitle>Telegram</CardTitle>
-                <CardDescription>
-                  Receive notifications via Telegram bot.
-                </CardDescription>
-              </div>
+          <Card.Header>
+            <Avatar>
+              <Avatar.Fallback>
+                <Send className="size-5" />
+              </Avatar.Fallback>
+            </Avatar>
+            <div className="flex flex-1 flex-col gap-2">
+              <Card.Title>Telegram</Card.Title>
+              <Card.Description>
+                Receive notifications via Telegram bot.
+              </Card.Description>
             </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <p className="text-muted-foreground text-sm">
+          </Card.Header>
+          <Card.Content>
+            <Typography type="body-sm" color="muted">
               Link your Telegram account to receive release notifications
               directly in your chat.
-            </p>
-            {isPending ? (
-              <Button disabled className="w-fit">
-                <Loader2 className="size-4 animate-spin" />
-                Loading...
+            </Typography>
+            {isPending && (
+              <Button isDisabled isPending>
+                Loading
               </Button>
-            ) : telegramError ? (
+            )}
+            {!isPending && telegramError && (
               <div className="flex items-center gap-2">
-                <span className="text-destructive text-sm">
+                <Typography type="body-sm" className="text-danger">
                   {telegramError}
-                </span>
+                </Typography>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={fetchTelegramStatus}
+                  onPress={fetchTelegramStatus}
                 >
                   Retry
                 </Button>
               </div>
-            ) : telegramLinked ? (
+            )}
+            {!isPending && !telegramError && telegramLinked && (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 rounded-full bg-green-500/10 px-3 py-1 text-green-600 text-sm dark:text-green-400">
-                  <Check className="size-4" />
-                  Connected
-                </div>
-                <Button variant="outline" size="sm" asChild>
-                  <a
-                    href="https://t.me/ShipRadar_Bot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="size-4" />
-                    Open Bot
-                  </a>
-                </Button>
-              </div>
-            ) : (
-              <>
-                <Button
-                  onClick={() => setTelegramDialogOpen(true)}
-                  className="w-fit"
+                <Chip color="success" variant="soft">
+                  <Chip.Label>Connected</Chip.Label>
+                </Chip>
+                <Link
+                  href="https://t.me/ShipRadar_Bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
                 >
+                  Open Bot
+                  <Link.Icon />
+                </Link>
+              </div>
+            )}
+            {!isPending && !telegramError && !telegramLinked && (
+              <>
+                <Button onPress={() => setTelegramDialogOpen(true)}>
                   <Send className="size-4" />
                   Link Telegram
                 </Button>
@@ -211,159 +206,183 @@ export function IntegrationsSection() {
                 />
               </>
             )}
-          </CardContent>
+          </Card.Content>
         </Card>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-500">
-                <Bell className="size-5 text-white" />
-              </div>
-              <div className="flex flex-1 flex-col gap-2">
-                <CardTitle>Browser Notifications</CardTitle>
-                <CardDescription>
-                  Get notified directly in your browser.
-                </CardDescription>
-              </div>
+          <Card.Header>
+            <Avatar>
+              <Avatar.Fallback>
+                <Bell className="size-5" />
+              </Avatar.Fallback>
+            </Avatar>
+            <div className="flex flex-1 flex-col gap-2">
+              <Card.Title>Browser Notifications</Card.Title>
+              <Card.Description>
+                Get notified directly in your browser.
+              </Card.Description>
             </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <p className="text-muted-foreground text-sm">
+          </Card.Header>
+          <Card.Content>
+            <Typography type="body-sm" color="muted">
               Receive instant notifications in your browser when new releases
               are detected.
-            </p>
-            {!isSupported ? (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <BellOff className="size-4" />
-                Your browser doesn&apos;t support notifications
-              </div>
-            ) : permission === "granted" ? (
-              <div className="flex items-center gap-2 rounded-full bg-green-500/10 px-3 py-1 text-green-600 text-sm dark:text-green-400">
-                <Check className="size-4" />
-                Enabled
-              </div>
-            ) : permission === "denied" ? (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <BellOff className="size-4" />
-                Notifications blocked. Enable in browser settings.
-              </div>
-            ) : (
-              <Button onClick={requestPermission} className="w-fit">
-                <Bell className="size-4" />
-                Enable Notifications
-              </Button>
+            </Typography>
+            {!isSupported && (
+              <Typography type="body-sm" color="muted">
+                <BellOff className="inline size-4" /> Your browser doesn&apos;t
+                support notifications
+              </Typography>
             )}
-          </CardContent>
+            {isSupported && permission === "granted" && (
+              <Chip color="success" variant="soft">
+                <Chip.Label>Enabled</Chip.Label>
+              </Chip>
+            )}
+            {isSupported && permission === "denied" && (
+              <Typography type="body-sm" color="muted">
+                <BellOff className="inline size-4" /> Notifications blocked.
+                Enable in browser settings.
+              </Typography>
+            )}
+            {isSupported &&
+              permission !== "granted" &&
+              permission !== "denied" && (
+                <Button onPress={requestPermission}>
+                  <Bell className="size-4" />
+                  Enable Notifications
+                </Button>
+              )}
+          </Card.Content>
         </Card>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-[#5865F2]">
-                <MessageCircle className="size-5 text-white" />
-              </div>
-              <div className="flex flex-1 flex-col gap-2">
-                <CardTitle>Discord</CardTitle>
-                <CardDescription>
-                  Get notified in your Discord server.
-                </CardDescription>
-              </div>
+          <Card.Header>
+            <Avatar>
+              <Avatar.Fallback>
+                <MessageCircle className="size-5" />
+              </Avatar.Fallback>
+            </Avatar>
+            <div className="flex flex-1 flex-col gap-2">
+              <Card.Title>Discord</Card.Title>
+              <Card.Description>
+                Get notified in your Discord server.
+              </Card.Description>
             </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <p className="text-muted-foreground text-sm">
+          </Card.Header>
+          <Card.Content>
+            <Typography type="body-sm" color="muted">
               Add our bot to your Discord server to receive release
               notifications in any channel.
-            </p>
+            </Typography>
 
-            {isPending ? (
-              <Button disabled className="w-fit">
-                <Loader2 className="size-4 animate-spin" />
-                Loading...
+            {isPending && (
+              <Button isDisabled isPending>
+                Loading
               </Button>
-            ) : discordError ? (
+            )}
+            {!isPending && discordError && (
               <div className="flex items-center gap-2">
-                <span className="text-destructive text-sm">{discordError}</span>
+                <Typography type="body-sm" className="text-danger">
+                  {discordError}
+                </Typography>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={fetchDiscordStatus}
+                  onPress={fetchDiscordStatus}
                 >
                   Retry
                 </Button>
               </div>
-            ) : !discordConnected ? (
-              <Button onClick={handleDiscordConnect} className="w-fit">
+            )}
+            {!isPending && !discordError && !discordConnected && (
+              <Button onPress={handleDiscordConnect}>
                 <MessageCircle className="size-4" />
                 Connect Discord
               </Button>
-            ) : discordChannels.length === 0 ? (
-              <>
-                <div className="flex w-fit items-center gap-2 rounded-full bg-green-500/10 px-3 py-1 text-green-600 text-sm dark:text-green-400">
-                  <Check className="size-4" />
-                  Discord Connected
-                </div>
-                <Button
-                  onClick={() => setDiscordDialogOpen(true)}
-                  variant="outline"
-                  className="w-fit"
-                >
-                  <Plus className="size-4" />
-                  Add Channel
-                </Button>
-              </>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {discordChannels.map((channel) => (
-                  <div
-                    key={channel.channelId}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Hash className="size-4 text-muted-foreground" />
-                      <span className="font-medium">{channel.channelName}</span>
-                      <span className="text-muted-foreground text-sm">
-                        in {channel.guildName}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={channel.enabled}
-                        onCheckedChange={(enabled) =>
-                          handleToggleDiscordChannel(channel.channelId, enabled)
-                        }
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          handleRemoveDiscordChannel(channel.channelId)
-                        }
-                      >
-                        <Trash2 className="size-4 text-muted-foreground" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  onClick={() => setDiscordDialogOpen(true)}
-                  variant="outline"
-                  size="sm"
-                  className="w-fit"
-                >
-                  <Plus className="size-4" />
-                  Add Another Channel
-                </Button>
-              </div>
             )}
+            {!isPending &&
+              !discordError &&
+              discordConnected &&
+              discordChannels.length === 0 && (
+                <>
+                  <Chip color="success" variant="soft">
+                    <Chip.Label>Discord Connected</Chip.Label>
+                  </Chip>
+                  <Button
+                    onPress={() => setDiscordDialogOpen(true)}
+                    variant="outline"
+                  >
+                    <Plus className="size-4" />
+                    Add Channel
+                  </Button>
+                </>
+              )}
+            {!isPending &&
+              !discordError &&
+              discordConnected &&
+              discordChannels.length > 0 && (
+                <div className="flex flex-col gap-3">
+                  {discordChannels.map((channel) => (
+                    <div
+                      key={channel.channelId}
+                      className="flex items-center justify-between rounded-lg border border-separator p-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Hash className="size-4 text-muted" />
+                        <Typography type="body-sm" weight="medium">
+                          {channel.channelName}
+                        </Typography>
+                        <Typography type="body-sm" color="muted">
+                          in {channel.guildName}
+                        </Typography>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          aria-label={`Toggle ${channel.channelName}`}
+                          isSelected={channel.enabled}
+                          onChange={(enabled) =>
+                            handleToggleDiscordChannel(
+                              channel.channelId,
+                              enabled,
+                            )
+                          }
+                        >
+                          <Switch.Control>
+                            <Switch.Thumb />
+                          </Switch.Control>
+                        </Switch>
+                        <Button
+                          isIconOnly
+                          variant="ghost"
+                          size="sm"
+                          aria-label="Remove channel"
+                          onPress={() =>
+                            handleRemoveDiscordChannel(channel.channelId)
+                          }
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <Button
+                    onPress={() => setDiscordDialogOpen(true)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Plus className="size-4" />
+                    Add Another Channel
+                  </Button>
+                </div>
+              )}
 
             <DiscordChannelDialog
               open={discordDialogOpen}
               onOpenChange={setDiscordDialogOpen}
               onSuccess={fetchDiscordStatus}
             />
-          </CardContent>
+          </Card.Content>
         </Card>
       </div>
     </>

@@ -1,14 +1,6 @@
-"use client";
-
-import { Badge } from "@web/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@web/components/ui/tooltip";
+import { Chip, Tooltip, Typography } from "@heroui/react";
 import { Crown, Lock } from "lucide-react";
-import Link from "next/link";
+import NextLink from "next/link";
 
 interface ProBadgeProps {
   showLock?: boolean;
@@ -16,32 +8,28 @@ interface ProBadgeProps {
 }
 
 export function ProBadge({ showLock = true, size = "default" }: ProBadgeProps) {
-  const iconSize = size === "sm" ? "size-3" : "size-4";
-  const textSize = size === "sm" ? "text-xs" : "text-sm";
+  const isSmall = size === "sm";
+  const iconSize = isSmall ? "size-3" : "size-4";
+  const chipSize = isSmall ? "sm" : "md";
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Link href="/pricing">
-            <Badge
-              variant="secondary"
-              className={`cursor-pointer gap-1 bg-yellow-500/10 text-yellow-600 transition-colors hover:bg-yellow-500/20 dark:text-yellow-400 ${textSize}`}
-            >
-              {showLock ? (
-                <Lock className={iconSize} />
-              ) : (
-                <Crown className={iconSize} />
-              )}
-              Pro
-            </Badge>
-          </Link>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>This feature requires a Pro subscription</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <Tooltip.Trigger>
+        <NextLink href="/pricing">
+          <Chip color="warning" variant="soft" size={chipSize}>
+            {showLock && <Lock className={iconSize} />}
+            {!showLock && <Crown className={iconSize} />}
+            <Chip.Label>Pro</Chip.Label>
+          </Chip>
+        </NextLink>
+      </Tooltip.Trigger>
+      <Tooltip.Content>
+        <Tooltip.Arrow />
+        <Typography type="body-sm">
+          This feature requires a Pro subscription
+        </Typography>
+      </Tooltip.Content>
+    </Tooltip>
   );
 }
 
@@ -58,7 +46,11 @@ export function ProFeature({ children, isPro, label }: ProFeatureProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-muted-foreground">{label}</span>
+      {label && (
+        <Typography type="body-sm" color="muted">
+          {label}
+        </Typography>
+      )}
       <ProBadge size="sm" />
     </div>
   );

@@ -1,10 +1,16 @@
 "use client";
 
-import { Button } from "@web/components/ui/button";
-import { Label } from "@web/components/ui/label";
-import { Switch } from "@web/components/ui/switch";
+import {
+  Avatar,
+  Button,
+  buttonVariants,
+  Label,
+  Link,
+  Switch,
+  Typography,
+} from "@heroui/react";
 import { api } from "@web/lib/api-client";
-import { Check, ExternalLink, Loader2, Send } from "lucide-react";
+import { Check, ExternalLink, Send } from "lucide-react";
 import { useState, useTransition } from "react";
 
 interface IntegrationToggleProps {
@@ -27,17 +33,17 @@ export function IntegrationToggle({
   const [isPending, startTransition] = useTransition();
   const [localEnabled, setLocalEnabled] = useState(enabled);
 
-  const handleToggle = (checked: boolean) => {
-    setLocalEnabled(checked);
+  const handleToggle = (isSelected: boolean) => {
+    setLocalEnabled(isSelected);
     startTransition(async () => {
       try {
         await api.patch("/channels/telegram/toggle", {
           chatId,
-          enabled: checked,
+          enabled: isSelected,
         });
-        onToggle(checked);
+        onToggle(isSelected);
       } catch {
-        setLocalEnabled(!checked);
+        setLocalEnabled(!isSelected);
       }
     });
   };
@@ -47,45 +53,62 @@ export function IntegrationToggle({
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-3">
-        <div
-          className={`flex size-9 items-center justify-center rounded-lg ${config.iconBg}`}
-        >
-          <config.icon className="size-4 text-white" />
-        </div>
-        <div className="flex flex-col">
-          <Label className="font-medium">{config.label}</Label>
-          {linked ? (
-            <span className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Check className="size-3 text-emerald-500" />
-              Connected
-            </span>
-          ) : (
-            <span className="text-muted-foreground text-xs">Not connected</span>
+        <Avatar>
+          <Avatar.Fallback>
+            <config.icon className="size-4" />
+          </Avatar.Fallback>
+        </Avatar>
+        <div className="flex flex-col gap-0.5">
+          <Label>{config.label}</Label>
+          {linked && (
+            <Typography type="body-xs" color="muted">
+              <Check className="inline size-3 text-success" /> Connected
+            </Typography>
+          )}
+          {!linked && (
+            <Typography type="body-xs" color="muted">
+              Not connected
+            </Typography>
           )}
         </div>
       </div>
 
-      {linked ? (
+      {linked && (
         <div className="flex items-center gap-3">
           <Switch
-            checked={localEnabled}
-            onCheckedChange={handleToggle}
-            disabled={isPending}
-          />
-          <Button variant="ghost" size="icon" asChild>
-            <a href={config.link} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="size-4" />
-            </a>
-          </Button>
+            aria-label={`Toggle ${config.label} notifications`}
+            isSelected={localEnabled}
+            onChange={handleToggle}
+            isDisabled={isPending}
+          >
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch>
+          <Link
+            href={config.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open ${config.label}`}
+            className={buttonVariants({
+              variant: "ghost",
+              size: "sm",
+              isIconOnly: true,
+            })}
+          >
+            <ExternalLink className="size-4" />
+          </Link>
         </div>
-      ) : (
+      )}
+      {!linked && (
         <Button
           variant="outline"
           size="sm"
-          onClick={onLink}
-          disabled={isPending}
+          onPress={onLink}
+          isDisabled={isPending}
+          isPending={isPending}
         >
-          {isPending ? <Loader2 className="size-4 animate-spin" /> : "Connect"}
+          Connect
         </Button>
       )}
     </div>
@@ -95,13 +118,11 @@ export function IntegrationToggle({
 const integrationConfig = {
   telegram: {
     label: "Telegram",
-    iconBg: "bg-[#0088cc]",
     icon: Send,
     link: "https://t.me/ShipRadar_Bot",
   },
   discord: {
     label: "Discord",
-    iconBg: "bg-[#5865F2]",
     icon: Send,
     link: "#",
   },

@@ -1,26 +1,27 @@
 "use client";
 
-// TODO(stripe): PricingDialog, Button, authClient, ExternalLink, RefreshCw and
-// useTransition are needed again when the billing CTAs below are re-enabled.
-import { Badge } from "@web/components/ui/badge";
 import {
+  Avatar,
+  Button,
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@web/components/ui/card";
-import { Skeleton } from "@web/components/ui/skeleton";
+  Chip,
+  Link,
+  Skeleton,
+  Typography,
+} from "@heroui/react";
+import { ItemCard, ItemCardGroup } from "@heroui-pro/react";
+import { PricingDialog } from "@web/components/pricing/pricing-dialog";
 import { useUserTier } from "@web/hooks/use-user-tier";
 import {
   CalendarClock,
   CreditCard,
   Crown,
+  RefreshCw,
   Sparkles,
   TrendingDown,
 } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 
 export function SubscriptionSection() {
   const {
@@ -32,6 +33,7 @@ export function SubscriptionSection() {
     cancelAtPeriodEnd,
     refetch,
   } = useUserTier();
+  const [isPending, startTransition] = useTransition();
   const [checkout, setCheckout] = useQueryState("checkout", parseAsString);
 
   const isProTier = tier === "pro";
@@ -57,91 +59,83 @@ export function SubscriptionSection() {
   }, [checkout, refetch, setCheckout]);
 
   // TODO(stripe): re-implement subscription management against the billing
-  // provider. These called Polar's authClient.customer.portal() / checkout().
-  // const handleManageSubscription = async () => {
-  //   const result = await authClient.customer.portal();
-  //   if (result.data?.url) {
-  //     window.open(result.data.url, "_blank");
-  //   }
-  // };
-  //
-  // const handleQuickCheckout = () => {
-  //   startTransition(async () => {
-  //     await authClient.checkout({ slug: "pro-monthly" });
-  //   });
-  // };
+  // provider. These previously called Polar's authClient.customer.portal() /
+  // authClient.checkout(), which were removed with the Polar integration.
+  const handleManageSubscription = () => {
+    window.open("/pricing", "_blank");
+  };
+
+  const handleQuickCheckout = () => {
+    startTransition(() => {
+      window.location.href = "/pricing";
+    });
+  };
 
   if (isTierPending) {
     return (
       <Card>
-        <CardHeader className="border-b bg-muted/30">
-          <div className="flex items-center gap-4">
-            <Skeleton className="size-10 rounded-lg" />
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-4 w-48" />
-            </div>
+        <Card.Header>
+          <Skeleton className="size-10 rounded-full" />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-48" />
           </div>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-10 w-32" />
-          </div>
-        </CardContent>
+        </Card.Header>
+        <Card.Content>
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-10 w-32" />
+        </Card.Content>
       </Card>
     );
   }
 
   return (
     <Card>
-      <CardHeader className="border-b bg-muted/30">
-        <div className="flex items-center gap-4">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-500/20 to-amber-500/5">
-            <CreditCard className="size-5 text-yellow-600 dark:text-yellow-400" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <CardTitle>Subscription</CardTitle>
-            <CardDescription>
-              Manage your subscription and billing.
-            </CardDescription>
-          </div>
+      <Card.Header className="items-start gap-4">
+        <Avatar>
+          <Avatar.Fallback>
+            <CreditCard className="size-5" />
+          </Avatar.Fallback>
+        </Avatar>
+        <div className="flex flex-col gap-2">
+          <Card.Title>Subscription</Card.Title>
+          <Card.Description>
+            Manage your subscription and billing.
+          </Card.Description>
         </div>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <div className="flex flex-col gap-6">
-          {/* Current Plan */}
-          <div className="flex items-start justify-between rounded-lg border bg-muted/30 p-4">
-            <div className="flex items-start gap-4">
-              <div className="flex size-12 items-center justify-center rounded-lg bg-background shadow-sm">
-                {isProTier ? (
-                  <Crown className="size-6 text-yellow-500" />
-                ) : (
-                  <Sparkles className="size-6 text-muted-foreground" />
-                )}
-              </div>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-semibold text-lg">
-                    {isProTier ? "Pro" : "Free"} Plan
-                  </h4>
+      </Card.Header>
+      <Card.Content className="gap-6">
+        <ItemCardGroup variant="transparent">
+          <ItemCard variant="outline">
+            <ItemCard.Icon>
+              {isProTier && <Crown className="size-5 text-warning" />}
+              {!isProTier && <Sparkles className="size-5" />}
+            </ItemCard.Icon>
+            <ItemCard.Content>
+              <ItemCard.Title>
+                <span className="flex flex-wrap items-center gap-2">
+                  {isProTier ? "Pro" : "Free"} Plan
                   {isProTier && isSubscriptionActive && (
-                    <Badge
-                      className={
-                        isSubscriptionCanceling
-                          ? "bg-orange-500/10 text-orange-600 hover:bg-orange-500/10 dark:text-orange-400"
-                          : "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/10 dark:text-yellow-400"
-                      }
+                    <Chip
+                      color={isSubscriptionCanceling ? "warning" : "success"}
+                      variant="soft"
+                      size="sm"
                     >
-                      {isSubscriptionCanceling ? "Canceling" : "Active"}
-                    </Badge>
+                      <Chip.Label>
+                        {isSubscriptionCanceling ? "Canceling" : "Active"}
+                      </Chip.Label>
+                    </Chip>
                   )}
-                </div>
-                {isProTier && isSubscriptionActive ? (
-                  <div className="flex flex-col gap-1 text-muted-foreground text-sm">
-                    <p>Billed {isBilledAnnually ? "annually" : "monthly"}</p>
+                </span>
+              </ItemCard.Title>
+              {isProTier && isSubscriptionActive && (
+                <ItemCard.Description>
+                  <span className="flex flex-col gap-1">
+                    <span>
+                      Billed {isBilledAnnually ? "annually" : "monthly"}
+                    </span>
                     {currentPeriodEnd && (
-                      <p>
+                      <span>
                         {isSubscriptionCanceling
                           ? "Access until: "
                           : "Next billing date: "}
@@ -150,160 +144,147 @@ export function SubscriptionSection() {
                           day: "numeric",
                           year: "numeric",
                         })}
-                      </p>
+                      </span>
                     )}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    25 repos, 25 AI summaries/month, 7-day history
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* TODO(stripe): re-enable the "Manage" CTA once billing is wired up.
+                  </span>
+                </ItemCard.Description>
+              )}
+              {!(isProTier && isSubscriptionActive) && (
+                <ItemCard.Description>
+                  25 repos, 25 AI summaries/month, 7-day history
+                </ItemCard.Description>
+              )}
+            </ItemCard.Content>
             {isProTier && isSubscriptionActive && !isSubscriptionCanceling && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleManageSubscription}
-              >
-                Manage
-                <ExternalLink className="ml-2 size-3" />
-              </Button>
-            )} */}
-          </div>
-
-          {/* Cancellation Context Banner */}
-          {isSubscriptionCanceling && currentPeriodEnd && (
-            <div className="relative overflow-hidden rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-transparent">
-              {/* Subtle top accent line */}
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
-
-              <div className="flex flex-col gap-5 p-5">
-                {/* Header with countdown */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10">
-                      <CalendarClock className="size-5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <h4 className="font-semibold text-amber-900 dark:text-amber-100">
-                        Your Pro access ends soon
-                      </h4>
-                      <p className="text-amber-700/80 text-sm dark:text-amber-300/70">
-                        You still have full access until{" "}
-                        <span className="font-medium text-amber-800 dark:text-amber-200">
-                          {currentPeriodEnd.toLocaleDateString("en-US", {
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Days countdown pill */}
-                  <div className="flex flex-col items-center rounded-lg bg-amber-500/10 px-3 py-1.5">
-                    <span className="font-bold text-2xl text-amber-600 tabular-nums dark:text-amber-400">
-                      {daysRemaining}
-                    </span>
-                    <span className="text-[10px] text-amber-600/70 uppercase tracking-wider dark:text-amber-400/60">
-                      {daysRemaining === 1 ? "day left" : "days left"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* What you'll lose section */}
-                <div className="rounded-lg bg-amber-950/5 p-4 dark:bg-amber-950/20">
-                  <div className="mb-3 flex items-center gap-2">
-                    <TrendingDown className="size-4 text-amber-600/70 dark:text-amber-400/60" />
-                    <span className="font-medium text-amber-800 text-sm dark:text-amber-200">
-                      After expiration, you&apos;ll lose access to:
-                    </span>
-                  </div>
-                  <ul className="grid gap-2 text-amber-700/80 text-sm sm:grid-cols-2 dark:text-amber-300/70">
-                    <li className="flex items-center gap-2">
-                      <span className="size-1 rounded-full bg-amber-500/50" />
-                      Unlimited repositories
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="size-1 rounded-full bg-amber-500/50" />
-                      Unlimited AI summaries
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="size-1 rounded-full bg-amber-500/50" />
-                      90-day notification history
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="size-1 rounded-full bg-amber-500/50" />
-                      GitHub stars import
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Actions */}
-                {/* TODO(stripe): re-enable the resubscribe / manage-billing CTAs
-                    once billing is wired up.
-                <div className="flex items-center gap-3">
-                  <Button
-                    onClick={handleQuickCheckout}
-                    disabled={isPending}
-                    className="bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-500/20 shadow-lg transition-all hover:from-amber-600 hover:to-orange-600 hover:shadow-amber-500/30"
-                  >
-                    <RefreshCw
-                      className={`mr-2 size-4 ${isPending ? "animate-spin" : ""}`}
-                    />
-                    {isPending ? "Processing..." : "Resubscribe to Pro"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleManageSubscription}
-                    className="text-amber-700 hover:bg-amber-500/10 hover:text-amber-800 dark:text-amber-300 dark:hover:text-amber-200"
-                  >
-                    Manage billing
-                    <ExternalLink className="ml-2 size-3" />
-                  </Button>
-                </div> */}
-              </div>
-            </div>
-          )}
-
-          {/* Upgrade CTA for Free users */}
-          {isFreeTier && (
-            <div className="flex flex-col gap-4 rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-4">
-              <div className="flex items-start gap-4">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <Crown className="size-5 text-primary" />
-                </div>
-                <div className="flex flex-1 flex-col gap-1">
-                  <h4 className="font-medium">Upgrade to Pro</h4>
-                  <p className="text-muted-foreground text-sm">
-                    Unlock unlimited repos, unlimited AI summaries, 90-day
-                    notification history, and more.
-                  </p>
-                </div>
-              </div>
-              {/* TODO(stripe): re-enable the "View Plans" / "Subscribe" CTAs
-                  once billing is wired up.
-              <div className="flex gap-3">
-                <PricingDialog>
-                  <Button>View Plans</Button>
-                </PricingDialog>
+              <ItemCard.Action>
                 <Button
                   variant="outline"
-                  onClick={handleQuickCheckout}
-                  disabled={isPending}
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onPress={handleManageSubscription}
                 >
-                  {isPending ? "Loading..." : "Subscribe — $3/mo"}
+                  Manage
+                  <Link.Icon />
                 </Button>
-              </div> */}
+              </ItemCard.Action>
+            )}
+          </ItemCard>
+        </ItemCardGroup>
+
+        {/* Cancellation Context Banner */}
+        {isSubscriptionCanceling && currentPeriodEnd && (
+          <div className="flex flex-col gap-5 rounded-xl border border-warning/20 bg-warning/5 p-5">
+            <ItemCard variant="transparent" className="px-0">
+              <ItemCard.Icon>
+                <CalendarClock className="size-5 text-warning" />
+              </ItemCard.Icon>
+              <ItemCard.Content>
+                <ItemCard.Title>Your Pro access ends soon</ItemCard.Title>
+                <ItemCard.Description>
+                  You still have full access until{" "}
+                  <span className="font-medium text-foreground">
+                    {currentPeriodEnd.toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </ItemCard.Description>
+              </ItemCard.Content>
+              <ItemCard.Action>
+                <div className="flex w-fit flex-col items-center rounded-lg bg-warning/10 px-3 py-1.5 sm:shrink-0">
+                  <Typography type="h6">{daysRemaining}</Typography>
+                  <Typography type="body-xs" color="muted">
+                    {daysRemaining === 1 ? "day left" : "days left"}
+                  </Typography>
+                </div>
+              </ItemCard.Action>
+            </ItemCard>
+
+            <div className="flex flex-col gap-3 rounded-lg bg-surface-secondary p-4">
+              <Typography type="body-sm" weight="medium">
+                <TrendingDown className="inline size-4 text-warning" /> After
+                expiration, you&apos;ll lose access to:
+              </Typography>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                <li>
+                  <Typography type="body-sm" color="muted">
+                    • Unlimited repositories
+                  </Typography>
+                </li>
+                <li>
+                  <Typography type="body-sm" color="muted">
+                    • Unlimited AI summaries
+                  </Typography>
+                </li>
+                <li>
+                  <Typography type="body-sm" color="muted">
+                    • 90-day notification history
+                  </Typography>
+                </li>
+                <li>
+                  <Typography type="body-sm" color="muted">
+                    • GitHub stars import
+                  </Typography>
+                </li>
+              </ul>
             </div>
-          )}
-        </div>
-      </CardContent>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button
+                onPress={handleQuickCheckout}
+                isDisabled={isPending}
+                isPending={isPending}
+                className="w-full sm:w-auto"
+              >
+                <RefreshCw className="size-4" />
+                Resubscribe to Pro
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={handleManageSubscription}
+                className="w-full sm:w-auto"
+              >
+                Manage billing
+                <Link.Icon />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade CTA for Free users */}
+        {isFreeTier && (
+          <div className="flex flex-col gap-4 rounded-lg border border-accent/20 bg-accent/5 p-4">
+            <ItemCard variant="transparent" className="px-0">
+              <ItemCard.Icon>
+                <Crown className="size-5" />
+              </ItemCard.Icon>
+              <ItemCard.Content>
+                <ItemCard.Title>Upgrade to Pro</ItemCard.Title>
+                <ItemCard.Description>
+                  Unlock unlimited repos, unlimited AI summaries, 90-day
+                  notification history, and more.
+                </ItemCard.Description>
+              </ItemCard.Content>
+            </ItemCard>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <PricingDialog>
+                <Button className="w-full sm:w-auto">View Plans</Button>
+              </PricingDialog>
+              <Button
+                variant="outline"
+                onPress={handleQuickCheckout}
+                isDisabled={isPending}
+                isPending={isPending}
+                className="w-full sm:w-auto"
+              >
+                Subscribe - $3/mo
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card.Content>
     </Card>
   );
 }

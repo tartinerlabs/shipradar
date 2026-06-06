@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent } from "@web/components/ui/card";
-import { Skeleton } from "@web/components/ui/skeleton";
+import { Avatar, Card, Skeleton, Typography } from "@heroui/react";
+import { NumberValue } from "@heroui-pro/react";
 import { api } from "@web/lib/api-client";
 import { Bell, FolderGit2, Send, Tag, Users } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
@@ -47,38 +47,28 @@ export function AdminStatsCards() {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       <AdminStatsCard
         icon={Users}
-        iconBg="bg-blue-500"
         label="Total Users"
         value={stats.uniqueUsers}
-        delay={0}
       />
       <AdminStatsCard
         icon={FolderGit2}
-        iconBg="bg-emerald-500"
         label="Unique Repos"
         value={stats.reposWatched}
-        delay={1}
       />
       <AdminStatsCard
         icon={Bell}
-        iconBg="bg-amber-500"
         label="Repos Tracked"
         value={stats.reposTracked}
-        delay={2}
       />
       <AdminStatsCard
         icon={Send}
-        iconBg="bg-purple-500"
         label="Notifications"
         value={stats.notificationsSent}
-        delay={3}
       />
       <AdminStatsCard
         icon={Tag}
-        iconBg="bg-rose-500"
         label="Releases"
         value={stats.releasesNotified}
-        delay={4}
       />
     </div>
   );
@@ -86,45 +76,26 @@ export function AdminStatsCards() {
 
 interface AdminStatsCardProps {
   icon: React.ComponentType<{ className?: string }>;
-  iconBg: string;
   label: string;
   value: number;
-  delay?: number;
 }
 
-function AdminStatsCard({
-  icon: Icon,
-  iconBg,
-  label,
-  value,
-  delay = 0,
-}: AdminStatsCardProps) {
+function AdminStatsCard({ icon: Icon, label, value }: AdminStatsCardProps) {
   return (
-    <Card
-      className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
-      style={{ animationDelay: `${delay * 50}ms` }}
-    >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.02]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, currentColor 1px, transparent 1px)",
-          backgroundSize: "12px 12px",
-        }}
-      />
-      <CardContent className="flex items-center gap-3 p-4">
-        <div
-          className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconBg}`}
-        >
-          <Icon className="size-5 text-white" />
-        </div>
+    <Card>
+      <Card.Content>
+        <Avatar>
+          <Avatar.Fallback>
+            <Icon className="size-5" />
+          </Avatar.Fallback>
+        </Avatar>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="truncate text-muted-foreground text-xs">{label}</p>
-          <span className="font-bold font-mono text-2xl tracking-tight">
-            {formatNumber(value)}
-          </span>
+          <Typography type="body-xs" color="muted" truncate>
+            {label}
+          </Typography>
+          <NumberValue value={value} notation="compact" />
         </div>
-      </CardContent>
+      </Card.Content>
     </Card>
   );
 }
@@ -132,23 +103,13 @@ function AdminStatsCard({
 function AdminStatsCardSkeleton() {
   return (
     <Card>
-      <CardContent className="flex items-center gap-3 p-4">
-        <Skeleton className="size-10 rounded-lg" />
+      <Card.Content>
+        <Skeleton className="size-10 rounded-full" />
         <div className="flex flex-col gap-1.5">
           <Skeleton className="h-3 w-16" />
           <Skeleton className="h-7 w-12" />
         </div>
-      </CardContent>
+      </Card.Content>
     </Card>
   );
-}
-
-function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`;
-  }
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}k`;
-  }
-  return num.toString();
 }

@@ -1,11 +1,19 @@
 "use client";
 
+import {
+  Avatar,
+  Button,
+  buttonVariants,
+  Card,
+  Chip,
+  Link,
+  Switch,
+  Typography,
+} from "@heroui/react";
+import { ItemCard, ItemCardGroup, KPI, KPIGroup } from "@heroui-pro/react";
 import { toggleTelegramChannel } from "@web/app/(dashboard)/dashboard/integrations/actions";
 import { TelegramLinkDialog } from "@web/components/integrations/telegram-link-dialog";
 import { AddRepoDialog } from "@web/components/repos/add-repo-dialog";
-import { Button } from "@web/components/ui/button";
-import { Switch } from "@web/components/ui/switch";
-import { cn } from "@web/lib/utils";
 import {
   Bell,
   ExternalLink,
@@ -55,203 +63,191 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
     }),
   );
 
-  const handleTelegramToggle = (checked: boolean) => {
+  const handleTelegramToggle = (isSelected: boolean) => {
     const channel = optimisticTelegram.channel;
-
     if (!channel) return;
-
     startTransition(async () => {
-      setOptimisticTelegram(checked);
-      await toggleTelegramChannel(channel.chatId, checked);
+      setOptimisticTelegram(isSelected);
+      await toggleTelegramChannel(channel.chatId, isSelected);
     });
   };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="font-bold text-2xl tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-sm">
+        <Typography type="h1">Dashboard</Typography>
+        <Typography type="body-sm" color="muted">
           Your release monitoring command center
-        </p>
+        </Typography>
       </div>
 
-      {/* Bento Grid */}
-      <div className="grid auto-rows-[minmax(140px,auto)] grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
-        {/* Repos Watched */}
-        <BentoCard
-          className="md:col-span-3 lg:col-span-4"
-          delay={0}
-          variant="feature"
-        >
-          <div className="flex h-full flex-col justify-between">
-            <div className="flex items-start justify-between">
-              <div className="flex size-11 items-center justify-center rounded-xl bg-blue-500/10 ring-1 ring-blue-500/20">
-                <FolderGit2 className="size-5 text-blue-500" />
-              </div>
-              <span className="font-mono text-muted-foreground text-xs uppercase tracking-wider">
-                Watching
-              </span>
+      <KPIGroup className="flex-col md:flex-row">
+        <KPI>
+          <KPI.Header>
+            <KPI.Icon status="success">
+              <FolderGit2 className="size-4" />
+            </KPI.Icon>
+            <KPI.Title>Repositories</KPI.Title>
+          </KPI.Header>
+          <KPI.Content>
+            <KPI.Value value={stats.reposWatched} />
+            <Typography type="body-sm" color="muted">
+              tracked
+            </Typography>
+          </KPI.Content>
+        </KPI>
+        <KPIGroup.Separator />
+        <KPI>
+          <KPI.Header>
+            <KPI.Icon status="success">
+              <Bell className="size-4" />
+            </KPI.Icon>
+            <KPI.Title>Active Channels</KPI.Title>
+          </KPI.Header>
+          <KPI.Content>
+            <div className="flex items-baseline gap-1">
+              <KPI.Value value={stats.activeChannels} />
+              {stats.totalChannels > 0 && (
+                <Typography type="body-sm" color="muted">
+                  / {stats.totalChannels}
+                </Typography>
+              )}
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="font-bold font-mono text-5xl tracking-tighter">
-                {stats.reposWatched}
-              </span>
-              <span className="text-muted-foreground text-sm">
-                repositories tracked
-              </span>
-            </div>
-          </div>
-        </BentoCard>
+            <Typography type="body-sm" color="muted">
+              enabled
+            </Typography>
+          </KPI.Content>
+        </KPI>
+      </KPIGroup>
 
-        {/* Active Channels */}
-        <BentoCard
-          className="md:col-span-3 lg:col-span-4"
-          delay={1}
-          variant="feature"
+      <div className="grid grid-cols-1 gap-4">
+        <ItemCardGroup
+          layout="grid"
+          className="lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"
         >
-          <div className="flex h-full flex-col justify-between">
-            <div className="flex items-start justify-between">
-              <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
-                <Bell className="size-5 text-emerald-500" />
-              </div>
-              <span className="font-mono text-muted-foreground text-xs uppercase tracking-wider">
-                Active
-              </span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-baseline gap-2">
-                <span className="font-bold font-mono text-5xl tracking-tighter">
-                  {stats.activeChannels}
-                </span>
-                {stats.totalChannels > 0 && (
-                  <span className="font-mono text-2xl text-muted-foreground">
-                    /{stats.totalChannels}
-                  </span>
-                )}
-              </div>
-              <span className="text-muted-foreground text-sm">
-                notification channels
-              </span>
-            </div>
-          </div>
-        </BentoCard>
-
-        {/* Quick Add Repo */}
-        <BentoCard
-          className="md:col-span-3 lg:col-span-4"
-          delay={2}
-          variant="action"
-          onClick={() => setAddRepoDialogOpen(true)}
-        >
-          <div className="flex h-full flex-col justify-between">
-            <div className="flex items-start justify-between">
-              <div className="flex size-11 items-center justify-center rounded-xl bg-foreground/5 ring-1 ring-foreground/10 transition-colors group-hover:bg-foreground/10">
-                <Github className="size-5" />
-              </div>
-              <Plus className="size-5 text-muted-foreground transition-transform group-hover:rotate-90" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold">Add Repository</span>
-              <span className="text-muted-foreground text-sm">
+          <ItemCard>
+            <ItemCard.Icon>
+              <Github className="size-5" />
+            </ItemCard.Icon>
+            <ItemCard.Content>
+              <ItemCard.Title>Add Repository</ItemCard.Title>
+              <ItemCard.Description>
                 Start watching a new repo
-              </span>
-            </div>
-          </div>
-        </BentoCard>
+              </ItemCard.Description>
+            </ItemCard.Content>
+            <ItemCard.Action>
+              <Button
+                isIconOnly
+                variant="ghost"
+                size="sm"
+                aria-label="Add repository"
+                onPress={() => setAddRepoDialogOpen(true)}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </ItemCard.Action>
+          </ItemCard>
 
-        {/* Telegram Integration */}
-        <BentoCard className="md:col-span-3 lg:col-span-4" delay={3}>
-          <div className="flex h-full flex-col justify-between">
-            <div className="flex items-start justify-between">
-              <div className="flex size-11 items-center justify-center rounded-xl bg-[#0088cc]/10 ring-1 ring-[#0088cc]/20">
-                <Send className="size-5 text-[#0088cc]" />
-              </div>
-              {optimisticTelegram.linked && (
-                <Switch
-                  checked={optimisticTelegram.channel?.enabled ?? false}
-                  onCheckedChange={handleTelegramToggle}
-                  disabled={isPending}
-                />
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
+          <ItemCard>
+            <ItemCard.Icon>
+              <Send className="size-5" />
+            </ItemCard.Icon>
+            <ItemCard.Content>
+              <ItemCard.Title>
+                <span className="flex flex-wrap items-center gap-2">
+                  Telegram
+                  {optimisticTelegram.linked && (
+                    <Chip color="success" variant="soft" size="sm">
+                      <Chip.Label>Connected</Chip.Label>
+                    </Chip>
+                  )}
+                </span>
+              </ItemCard.Title>
+              <ItemCard.Description>
+                {optimisticTelegram.linked
+                  ? "Telegram release alerts are connected"
+                  : "Connect the bot to receive release alerts"}
+              </ItemCard.Description>
+            </ItemCard.Content>
+            <ItemCard.Action>
               <div className="flex items-center gap-2">
-                <span className="font-semibold">Telegram</span>
                 {optimisticTelegram.linked && (
-                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-600 text-xs dark:text-emerald-400">
-                    Connected
-                  </span>
+                  <Link
+                    href="https://t.me/ShipRadar_Bot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={buttonVariants({ variant: "ghost", size: "sm" })}
+                  >
+                    Open bot
+                    <Link.Icon />
+                  </Link>
+                )}
+                {!optimisticTelegram.linked && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onPress={() => setTelegramDialogOpen(true)}
+                  >
+                    Connect
+                  </Button>
+                )}
+                {optimisticTelegram.linked && (
+                  <Switch
+                    aria-label="Toggle Telegram notifications"
+                    isSelected={optimisticTelegram.channel?.enabled ?? false}
+                    onChange={handleTelegramToggle}
+                    isDisabled={isPending}
+                  >
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch>
                 )}
               </div>
-              {optimisticTelegram.linked ? (
-                <a
-                  href="https://t.me/ShipRadar_Bot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground"
-                >
-                  <span>Open bot</span>
-                  <ExternalLink className="size-3" />
-                </a>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setTelegramDialogOpen(true)}
-                  className="w-fit"
-                >
-                  Connect
-                </Button>
-              )}
-            </div>
-          </div>
-        </BentoCard>
+            </ItemCard.Action>
+          </ItemCard>
+        </ItemCardGroup>
 
-        {/* Recent Releases */}
-        <BentoCard
-          className="row-span-2 md:col-span-6 lg:col-span-8"
-          delay={4}
-          variant="content"
-        >
-          <div className="flex h-full flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold">Recent Releases</h2>
-              <span className="font-mono text-muted-foreground text-xs uppercase tracking-wider">
-                Latest
-              </span>
-            </div>
-
-            {releases.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                  <FolderGit2 className="size-5 text-muted-foreground" />
+        <div>
+          <Card>
+            <Card.Header>
+              <Card.Title>Recent Releases</Card.Title>
+            </Card.Header>
+            <Card.Content>
+              {releases.length === 0 && (
+                <div className="flex flex-col items-center gap-2 py-8 text-center">
+                  <Avatar>
+                    <Avatar.Fallback>
+                      <FolderGit2 className="size-5" />
+                    </Avatar.Fallback>
+                  </Avatar>
+                  <Typography type="body-sm" color="muted">
+                    No releases yet
+                  </Typography>
+                  <Typography type="body-xs" color="muted">
+                    Subscribe to repositories to see their latest releases here
+                  </Typography>
                 </div>
-                <p className="text-muted-foreground text-sm">No releases yet</p>
-                <p className="max-w-[200px] text-muted-foreground/70 text-xs">
-                  Subscribe to repositories to see their latest releases here
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-1 flex-col gap-3 overflow-hidden">
-                {releases.slice(0, 4).map((release, index) => (
-                  <ReleaseItem
-                    key={`${release.repoName}-${release.tagName}`}
-                    release={release}
-                    index={index}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </BentoCard>
+              )}
+              {releases.length > 0 && (
+                <div className="flex flex-col gap-3">
+                  {releases.slice(0, 4).map((release) => (
+                    <ReleaseItem
+                      key={`${release.repoName}-${release.tagName}`}
+                      release={release}
+                    />
+                  ))}
+                </div>
+              )}
+            </Card.Content>
+          </Card>
+        </div>
       </div>
 
       <TelegramLinkDialog
         open={telegramDialogOpen}
         onOpenChange={setTelegramDialogOpen}
       />
-
       <AddRepoDialog
         open={addRepoDialogOpen}
         onOpenChange={setAddRepoDialogOpen}
@@ -260,126 +256,45 @@ export function Overview({ stats, releases, telegramStatus }: OverviewProps) {
   );
 }
 
-interface BentoCardProps {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-  variant?: "default" | "feature" | "action" | "content";
-  onClick?: () => void;
-}
-
-function BentoCard({
-  children,
-  className,
-  delay = 0,
-  variant = "default",
-  onClick,
-}: BentoCardProps) {
-  const baseClasses = cn(
-    "group relative overflow-hidden rounded-2xl border bg-card p-5 text-left transition-all duration-300",
-    "fade-in slide-in-from-bottom-2 animate-in",
-    variant === "feature" && "bg-gradient-to-br from-card to-muted/30",
-    variant === "action" && "border-dashed hover:border-solid",
-    variant === "content" && "bg-card",
-    className,
-  );
-
-  const interactiveClasses =
-    "cursor-pointer hover:border-foreground/20 hover:shadow-lg hover:shadow-primary/5";
-
-  const style = {
-    animationDelay: `${delay * 75}ms`,
-    animationFillMode: "backwards" as const,
-  };
-
-  const cardContent = (
-    <>
-      {/* Subtle grid pattern */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, currentColor 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }}
-      />
-
-      {/* Gradient overlay for feature cards */}
-      {variant === "feature" && (
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/[0.02]" />
-      )}
-
-      <div className="relative z-10 h-full">{children}</div>
-    </>
-  );
-
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        className={cn(baseClasses, interactiveClasses)}
-        style={style}
-        onClick={onClick}
-      >
-        {cardContent}
-      </button>
-    );
-  }
-
-  return (
-    <div className={baseClasses} style={style}>
-      {cardContent}
-    </div>
-  );
-}
-
 interface ReleaseItemProps {
   release: Release;
-  index: number;
 }
 
-function ReleaseItem({ release, index }: ReleaseItemProps) {
-  const timeAgo = release.publishedAt
-    ? formatTimeAgo(release.publishedAt)
-    : null;
+function ReleaseItem({ release }: ReleaseItemProps) {
+  const timeAgo = release.publishedAt && formatTimeAgo(release.publishedAt);
 
   return (
     <a
       href={release.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group/item flex items-start gap-4 rounded-xl border border-transparent bg-muted/30 p-3 transition-all hover:border-border hover:bg-muted/50"
-      style={{
-        animationDelay: `${(index + 5) * 75}ms`,
-        animationFillMode: "backwards",
-      }}
+      className="group flex items-start gap-3 rounded-lg p-2 transition-colors hover:bg-surface-secondary"
     >
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
-        <FolderGit2 className="size-4 text-muted-foreground" />
-      </div>
-
+      <Avatar size="sm">
+        <Avatar.Fallback>
+          <FolderGit2 className="size-4" />
+        </Avatar.Fallback>
+      </Avatar>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-center gap-2">
-          <span className="truncate font-medium text-sm">
+          <Typography type="body-sm" weight="medium" truncate>
             {release.repoName}
-          </span>
-          <code className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground text-xs">
-            {release.tagName}
-          </code>
+          </Typography>
+          <Typography.Code>{release.tagName}</Typography.Code>
           {release.aiAnalysis && (
             <CategoryBadge category={release.aiAnalysis.category} />
           )}
-          <ExternalLink className="ml-auto size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/item:opacity-100" />
+          <ExternalLink className="ml-auto size-3.5 shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
         </div>
-
         {release.aiAnalysis?.summary && (
-          <p className="line-clamp-1 text-muted-foreground text-xs">
+          <Typography type="body-xs" color="muted" truncate>
             {release.aiAnalysis.summary}
-          </p>
+          </Typography>
         )}
-
         {timeAgo && (
-          <span className="text-muted-foreground/70 text-xs">{timeAgo}</span>
+          <Typography type="body-xs" color="muted">
+            {timeAgo}
+          </Typography>
         )}
       </div>
     </a>
