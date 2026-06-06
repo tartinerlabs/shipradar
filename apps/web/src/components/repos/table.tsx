@@ -1,60 +1,33 @@
 "use client";
 
 import {
-  type ColumnDef,
-  type ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  type SortingState,
-  useReactTable,
-  type VisibilityState,
-} from "@tanstack/react-table";
+  Button,
+  Chip,
+  Dropdown,
+  InputGroup,
+  Label,
+  Link,
+  Modal,
+  Separator,
+  TextField,
+  Typography,
+} from "@heroui/react";
+import { DataGrid, type DataGridColumn } from "@heroui-pro/react";
 import {
   deleteRepo,
   toggleRepoPause,
 } from "@web/app/(dashboard)/dashboard/repos/actions";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@web/components/ui/alert-dialog";
-import { Badge } from "@web/components/ui/badge";
-import { Button } from "@web/components/ui/button";
-import { Checkbox } from "@web/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@web/components/ui/dropdown-menu";
-import { Input } from "@web/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@web/components/ui/table";
-import {
-  ArrowUpDown,
-  ChevronDown,
   ExternalLink,
   MoreHorizontal,
   Pause,
   Play,
   Trash2,
 } from "lucide-react";
-import * as React from "react";
+import { type Key, useCallback, useMemo, useState } from "react";
+
+/** Matches DataGrid's selection type (React Aria's `"all" | Set<Key>`). */
+type Selection = "all" | Set<string | number>;
 
 interface Repo {
   id: string;
@@ -76,163 +49,14 @@ function formatDate(dateString: string): string {
   });
 }
 
-function createColumns(
-  onRequestDelete: (repo: Repo) => void,
-  onTogglePause: (repo: Repo) => void,
-): ColumnDef<Repo>[] {
-  return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "repoName",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Repository
-          <ArrowUpDown className="ml-2 size-4" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const repoName = row.getValue("repoName") as string;
-        return (
-          <div className="flex items-center gap-2">
-            <a
-              href={`https://github.com/${repoName}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium hover:underline"
-            >
-              {repoName}
-            </a>
-            <ExternalLink className="size-3 text-muted-foreground" />
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "paused",
-      header: "Status",
-      cell: ({ row }) => {
-        const isPaused = row.getValue("paused") as boolean;
-        return isPaused ? (
-          <Badge variant="secondary" className="gap-1">
-            <Pause className="size-3" />
-            Paused
-          </Badge>
-        ) : (
-          <Badge variant="default" className="gap-1">
-            <Play className="size-3" />
-            Active
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "lastNotifiedTag",
-      header: "Last Release",
-      cell: ({ row }) => {
-        const tag = row.getValue("lastNotifiedTag") as string | null;
-        return tag ? (
-          <Badge variant="secondary">{tag}</Badge>
-        ) : (
-          <span className="text-muted-foreground text-sm">—</span>
-        );
-      },
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Added",
-      cell: ({ row }) => (
-        <span className="text-muted-foreground text-sm">
-          {formatDate(row.getValue("createdAt"))}
-        </span>
-      ),
-    },
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const repo = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm">
-                <MoreHorizontal className="size-4" />
-                <span className="sr-only">Actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() =>
-                  window.open(`https://github.com/${repo.repoName}`, "_blank")
-                }
-              >
-                <ExternalLink className="size-4" />
-                View on GitHub
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onTogglePause(repo)}>
-                {repo.paused ? (
-                  <>
-                    <Play className="size-4" />
-                    Resume tracking
-                  </>
-                ) : (
-                  <>
-                    <Pause className="size-4" />
-                    Pause tracking
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => onRequestDelete(repo)}
-              >
-                <Trash2 className="size-4" />
-                Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
-  ];
-}
-
 export function ReposTable({ initialRepos }: ReposTableProps) {
-  const [repos, setRepos] = React.useState<Repo[]>(initialRepos);
-  const [error, setError] = React.useState<string | null>(null);
-  const [repoToDelete, setRepoToDelete] = React.useState<Repo | null>(null);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [repos, setRepos] = useState<Repo[]>(initialRepos);
+  const [error, setError] = useState<string | null>(null);
+  const [repoToDelete, setRepoToDelete] = useState<Repo | null>(null);
+  const [query, setQuery] = useState("");
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
 
-  const handleDelete = React.useCallback(async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await deleteRepo(id);
       setRepos((previousRepos) =>
@@ -245,7 +69,7 @@ export function ReposTable({ initialRepos }: ReposTableProps) {
     }
   }, []);
 
-  const handleTogglePause = React.useCallback(async (repoToToggle: Repo) => {
+  const handleTogglePause = useCallback(async (repoToToggle: Repo) => {
     try {
       const result = await toggleRepoPause(
         repoToToggle.id,
@@ -263,173 +87,205 @@ export function ReposTable({ initialRepos }: ReposTableProps) {
     }
   }, []);
 
-  const columns = React.useMemo(
-    () => createColumns(setRepoToDelete, handleTogglePause),
+  const handleRowAction = useCallback(
+    (repo: Repo, key: Key) => {
+      if (key === "github") {
+        window.open(`https://github.com/${repo.repoName}`, "_blank");
+      } else if (key === "pause") {
+        handleTogglePause(repo);
+      } else if (key === "delete") {
+        setRepoToDelete(repo);
+      }
+    },
     [handleTogglePause],
   );
 
-  const table = useReactTable({
-    data: repos,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  });
+  const columns = useMemo<DataGridColumn<Repo>[]>(
+    () => [
+      {
+        id: "repoName",
+        header: "Repository",
+        accessorKey: "repoName",
+        isRowHeader: true,
+        allowsSorting: true,
+        cell: (repo) => (
+          <Link
+            href={`https://github.com/${repo.repoName}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {repo.repoName}
+            <Link.Icon />
+          </Link>
+        ),
+      },
+      {
+        id: "status",
+        header: "Status",
+        accessorKey: "paused",
+        cell: (repo) => (
+          <Chip
+            color={repo.paused ? "default" : "success"}
+            variant="soft"
+            size="sm"
+          >
+            {repo.paused && <Pause className="size-3" />}
+            {!repo.paused && <Play className="size-3" />}
+            <Chip.Label>{repo.paused ? "Paused" : "Active"}</Chip.Label>
+          </Chip>
+        ),
+      },
+      {
+        id: "lastRelease",
+        header: "Last Release",
+        accessorKey: "lastNotifiedTag",
+        cell: (repo) =>
+          repo.lastNotifiedTag ? (
+            <Chip variant="soft" size="sm">
+              <Chip.Label>{repo.lastNotifiedTag}</Chip.Label>
+            </Chip>
+          ) : (
+            <Typography type="body-sm" color="muted">
+              —
+            </Typography>
+          ),
+      },
+      {
+        id: "createdAt",
+        header: "Added",
+        accessorKey: "createdAt",
+        allowsSorting: true,
+        cell: (repo) => (
+          <Typography type="body-sm" color="muted">
+            {formatDate(repo.createdAt)}
+          </Typography>
+        ),
+      },
+      {
+        id: "actions",
+        header: "",
+        align: "end",
+        cell: (repo) => (
+          <Dropdown>
+            <Button isIconOnly variant="ghost" size="sm" aria-label="Actions">
+              <MoreHorizontal className="size-4" />
+            </Button>
+            <Dropdown.Popover>
+              <Dropdown.Menu onAction={(key) => handleRowAction(repo, key)}>
+                <Dropdown.Item id="github" textValue="View on GitHub">
+                  <ExternalLink className="size-4 text-muted" />
+                  <Label>View on GitHub</Label>
+                </Dropdown.Item>
+                <Dropdown.Item id="pause" textValue="Toggle tracking">
+                  {repo.paused && <Play className="size-4 text-muted" />}
+                  {!repo.paused && <Pause className="size-4 text-muted" />}
+                  <Label>
+                    {repo.paused ? "Resume tracking" : "Pause tracking"}
+                  </Label>
+                </Dropdown.Item>
+                <Separator />
+                <Dropdown.Item id="delete" textValue="Remove" variant="danger">
+                  <Trash2 className="size-4 text-danger" />
+                  <Label>Remove</Label>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
+        ),
+      },
+    ],
+    [handleRowAction],
+  );
+
+  const filteredRepos = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return repos;
+    return repos.filter((repo) =>
+      repo.repoName.toLowerCase().includes(trimmed),
+    );
+  }, [repos, query]);
+
+  const selectedCount =
+    selectedKeys === "all" ? filteredRepos.length : selectedKeys.size;
 
   return (
-    <div className="w-full">
+    <div className="flex w-full flex-col gap-4">
       {error && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3">
-          <p className="text-destructive text-sm">{error}</p>
-          <Button variant="ghost" size="sm" onClick={() => setError(null)}>
+        <div className="flex items-center justify-between rounded-lg border border-danger/20 bg-danger/10 px-4 py-3">
+          <Typography type="body-sm" className="text-danger">
+            {error}
+          </Typography>
+          <Button variant="ghost" size="sm" onPress={() => setError(null)}>
             Dismiss
           </Button>
         </div>
       )}
-      <div className="flex items-center gap-4 py-4">
-        <Input
-          placeholder="Filter repositories..."
-          value={
-            (table.getColumn("repoName")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn("repoName")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown className="ml-2 size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  className="capitalize"
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                >
-                  {column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No repositories tracked yet.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end gap-2 py-4">
-        <div className="flex-1 text-muted-foreground text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
 
-      <AlertDialog
-        open={!!repoToDelete}
+      <TextField
+        value={query}
+        onChange={setQuery}
+        aria-label="Filter repositories"
+      >
+        <InputGroup>
+          <InputGroup.Input placeholder="Filter repositories..." />
+        </InputGroup>
+      </TextField>
+
+      <DataGrid
+        aria-label="Tracked repositories"
+        data={filteredRepos}
+        columns={columns}
+        getRowId={(repo) => repo.id}
+        selectionMode="multiple"
+        showSelectionCheckboxes
+        selectedKeys={selectedKeys}
+        onSelectionChange={setSelectedKeys}
+        renderEmptyState={() => (
+          <Typography type="body-sm" color="muted">
+            No repositories tracked yet.
+          </Typography>
+        )}
+      />
+
+      {selectedCount > 0 && (
+        <Typography type="body-sm" color="muted">
+          {selectedCount} of {filteredRepos.length} row(s) selected.
+        </Typography>
+      )}
+
+      <Modal.Backdrop
+        isOpen={!!repoToDelete}
         onOpenChange={(open) => !open && setRepoToDelete(null)}
       >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove repository?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will stop tracking{" "}
-              <span className="font-medium text-foreground">
-                {repoToDelete?.repoName}
-              </span>{" "}
-              and you will no longer receive notifications for new releases.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => repoToDelete && handleDelete(repoToDelete.id)}
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <Modal.Container>
+          <Modal.Dialog>
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>Remove repository?</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <Typography color="muted">
+                This will stop tracking{" "}
+                <Typography weight="medium">
+                  {repoToDelete?.repoName}
+                </Typography>{" "}
+                and you will no longer receive notifications for new releases.
+              </Typography>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button slot="close" variant="secondary">
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onPress={() => repoToDelete && handleDelete(repoToDelete.id)}
+              >
+                Remove
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </div>
   );
 }

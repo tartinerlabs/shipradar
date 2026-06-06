@@ -1,52 +1,38 @@
 "use client";
 
 import {
-  type ColumnDef,
-  type ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  type SortingState,
-  useReactTable,
-} from "@tanstack/react-table";
+  Avatar,
+  Button,
+  Chip,
+  Dropdown,
+  InputGroup,
+  Label,
+  Separator,
+  Skeleton,
+  TextField,
+  Typography,
+} from "@heroui/react";
+import { DataGrid, type DataGridColumn, NumberValue } from "@heroui-pro/react";
 import { BanUserDialog } from "@web/components/admin/ban-user-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@web/components/ui/avatar";
-import { Badge } from "@web/components/ui/badge";
-import { Button } from "@web/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@web/components/ui/dropdown-menu";
-import { Input } from "@web/components/ui/input";
-import { Skeleton } from "@web/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@web/components/ui/table";
 import { api } from "@web/lib/api-client";
 import {
-  ArrowUpDown,
   Ban,
   Check,
   Eye,
-  Loader2,
   MoreHorizontal,
   Search,
   ShieldCheck,
   UserX,
 } from "lucide-react";
 import type { Route } from "next";
-import Link from "next/link";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import {
+  type Key,
+  useCallback,
+  useEffect,
+  useState,
+  useTransition,
+} from "react";
 
 interface User {
   id: string;
@@ -68,12 +54,19 @@ interface UsersResponse {
   offset: number;
 }
 
+function formatJoined(dateString: string): string {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export function UsersTable() {
+  const router = useRouter();
   const [data, setData] = useState<UsersResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [banDialogUser, setBanDialogUser] = useState<User | null>(null);
 
@@ -83,7 +76,6 @@ export function UsersTable() {
         setError(null);
         const params = new URLSearchParams({ limit: "20", offset: "0" });
         if (search) params.set("search", search);
-
         const responseData = await api.get<UsersResponse>(
           `/admin/users?${params}`,
         );
@@ -105,174 +97,154 @@ export function UsersTable() {
     return () => clearTimeout(timeout);
   }, [searchQuery, fetchUsers]);
 
-  const handleUnban = async (userId: string) => {
-    try {
-      await api.post(`/admin/users/${userId}/ban`, { action: "unban" });
-      fetchUsers(searchQuery);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to unban user");
-    }
-  };
+  const handleUnban = useCallback(
+    async (userId: string) => {
+      try {
+        await api.post(`/admin/users/${userId}/ban`, { action: "unban" });
+        fetchUsers(searchQuery);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to unban user");
+      }
+    },
+    [fetchUsers, searchQuery],
+  );
 
-  const columns: ColumnDef<User>[] = [
+  const handleRowAction = useCallback(
+    (user: User, key: Key) => {
+      if (key === "view") {
+        router.push(`/dashboard/admin/users/${user.id}` as Route);
+      } else if (key === "unban") {
+        handleUnban(user.id);
+      } else if (key === "ban") {
+        setBanDialogUser(user);
+      }
+    },
+    [router, handleUnban],
+  );
+
+  const columns: DataGridColumn<User>[] = [
     {
+      id: "name",
+      header: "User",
       accessorKey: "name",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          User
-          <ArrowUpDown className="ml-2 size-4" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const user = row.original;
-        return (
-          <div className="flex items-center gap-3">
-            <Avatar className="size-9">
-              <AvatarImage src={user.image ?? ""} alt={user.name} />
-              <AvatarFallback className="text-xs">
-                {user.name?.charAt(0).toUpperCase() ?? "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col gap-0.5">
-              <span className="font-medium">{user.name}</span>
-              <span className="text-muted-foreground text-xs">
-                {user.email}
-              </span>
-            </div>
+      isRowHeader: true,
+      allowsSorting: true,
+      cell: (user) => (
+        <div className="flex items-center gap-3">
+          <Avatar size="sm">
+            {user.image && <Avatar.Image src={user.image} alt={user.name} />}
+            <Avatar.Fallback>
+              {user.name?.charAt(0).toUpperCase() ?? "U"}
+            </Avatar.Fallback>
+          </Avatar>
+          <div className="flex flex-col gap-0.5">
+            <Typography type="body-sm" weight="medium">
+              {user.name}
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              {user.email}
+            </Typography>
           </div>
-        );
-      },
-    },
-    {
-      accessorKey: "role",
-      header: "Role",
-      cell: ({ row }) => {
-        const role = row.getValue("role") as string | null;
-        return role === "admin" ? (
-          <Badge className="bg-purple-500/15 text-purple-600 hover:bg-purple-500/20 dark:text-purple-400">
-            <ShieldCheck className="mr-1 size-3" />
-            Admin
-          </Badge>
-        ) : (
-          <Badge variant="secondary">User</Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "banned",
-      header: "Status",
-      cell: ({ row }) => {
-        const banned = row.getValue("banned") as boolean | null;
-        return banned ? (
-          <Badge className="bg-red-500/15 text-red-600 hover:bg-red-500/20 dark:text-red-400">
-            <UserX className="mr-1 size-3" />
-            Banned
-          </Badge>
-        ) : (
-          <Badge className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400">
-            <Check className="mr-1 size-3" />
-            Active
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "createdAt",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Joined
-          <ArrowUpDown className="ml-2 size-4" />
-        </Button>
+        </div>
       ),
-      cell: ({ row }) => {
-        const date = new Date(row.getValue("createdAt"));
-        return (
-          <span className="text-muted-foreground text-sm">
-            {date.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </span>
-        );
-      },
     },
     {
-      accessorKey: "repoCount",
+      id: "role",
+      header: "Role",
+      accessorKey: "role",
+      cell: (user) =>
+        user.role === "admin" ? (
+          <Chip color="accent" variant="soft" size="sm">
+            <ShieldCheck className="size-3" />
+            <Chip.Label>Admin</Chip.Label>
+          </Chip>
+        ) : (
+          <Chip variant="soft" size="sm">
+            <Chip.Label>User</Chip.Label>
+          </Chip>
+        ),
+    },
+    {
+      id: "banned",
+      header: "Status",
+      accessorKey: "banned",
+      cell: (user) =>
+        user.banned ? (
+          <Chip color="danger" variant="soft" size="sm">
+            <UserX className="size-3" />
+            <Chip.Label>Banned</Chip.Label>
+          </Chip>
+        ) : (
+          <Chip color="success" variant="soft" size="sm">
+            <Check className="size-3" />
+            <Chip.Label>Active</Chip.Label>
+          </Chip>
+        ),
+    },
+    {
+      id: "createdAt",
+      header: "Joined",
+      accessorKey: "createdAt",
+      allowsSorting: true,
+      cell: (user) => (
+        <Typography type="body-sm" color="muted">
+          {formatJoined(user.createdAt)}
+        </Typography>
+      ),
+    },
+    {
+      id: "repoCount",
       header: "Repos",
-      cell: ({ row }) => {
-        const count = row.getValue("repoCount") as number;
-        return <span className="font-mono text-sm">{count}</span>;
-      },
+      accessorKey: "repoCount",
+      allowsSorting: true,
+      cell: (user) => <NumberValue value={user.repoCount} />,
     },
     {
       id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const user = row.original;
+      header: "",
+      align: "end",
+      cell: (user) => {
         const isAdmin = user.role === "admin";
-
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm">
-                <MoreHorizontal className="size-4" />
-                <span className="sr-only">Actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/admin/users/${user.id}` as Route}>
-                  <Eye className="size-4" />
-                  View Details
-                </Link>
-              </DropdownMenuItem>
-              {!isAdmin && (
-                <>
-                  <DropdownMenuSeparator />
-                  {user.banned ? (
-                    <DropdownMenuItem onClick={() => handleUnban(user.id)}>
-                      <Check className="size-4" />
-                      Unban User
-                    </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => setBanDialogUser(user)}
+          <Dropdown>
+            <Button isIconOnly variant="ghost" size="sm" aria-label="Actions">
+              <MoreHorizontal className="size-4" />
+            </Button>
+            <Dropdown.Popover>
+              <Dropdown.Menu onAction={(key) => handleRowAction(user, key)}>
+                <Dropdown.Item id="view" textValue="View Details">
+                  <Eye className="size-4 text-muted" />
+                  <Label>View Details</Label>
+                </Dropdown.Item>
+                {!isAdmin && user.banned && (
+                  <>
+                    <Separator />
+                    <Dropdown.Item id="unban" textValue="Unban User">
+                      <Check className="size-4 text-muted" />
+                      <Label>Unban User</Label>
+                    </Dropdown.Item>
+                  </>
+                )}
+                {!isAdmin && !user.banned && (
+                  <>
+                    <Separator />
+                    <Dropdown.Item
+                      id="ban"
+                      textValue="Ban User"
+                      variant="danger"
                     >
-                      <Ban className="size-4" />
-                      Ban User
-                    </DropdownMenuItem>
-                  )}
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                      <Ban className="size-4 text-danger" />
+                      <Label>Ban User</Label>
+                    </Dropdown.Item>
+                  </>
+                )}
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
         );
       },
     },
   ];
-
-  const table = useReactTable({
-    data: data?.users ?? [],
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      columnFilters,
-    },
-  });
 
   if (!data && isPending) {
     return <UsersTableSkeleton />;
@@ -282,104 +254,49 @@ export function UsersTable() {
     <>
       <div className="flex flex-col gap-4">
         {error && (
-          <div className="flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3">
-            <p className="text-destructive text-sm">{error}</p>
+          <div className="flex items-center justify-between rounded-lg border border-danger/20 bg-danger/10 px-4 py-3">
+            <Typography type="body-sm" className="text-danger">
+              {error}
+            </Typography>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => fetchUsers(searchQuery)}
+              onPress={() => fetchUsers(searchQuery)}
             >
               Retry
             </Button>
           </div>
         )}
-        <div className="flex items-center gap-4">
-          <div className="relative max-w-sm flex-1">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          {isPending && (
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+
+        <TextField
+          value={searchQuery}
+          onChange={setSearchQuery}
+          aria-label="Search users"
+        >
+          <InputGroup>
+            <InputGroup.Prefix>
+              <Search className="size-4 text-muted" />
+            </InputGroup.Prefix>
+            <InputGroup.Input placeholder="Search users..." />
+          </InputGroup>
+        </TextField>
+
+        <DataGrid
+          aria-label="Users"
+          data={data?.users ?? []}
+          columns={columns}
+          getRowId={(user) => user.id}
+          renderEmptyState={() => (
+            <div className="flex flex-col items-center gap-2 py-8">
+              <UserX className="size-8 text-muted" />
+              <Typography color="muted">No users found.</Typography>
+            </div>
           )}
-        </div>
+        />
 
-        <div className="overflow-hidden rounded-lg border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-32 text-center"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <UserX className="size-8 text-muted-foreground/50" />
-                      <p className="text-muted-foreground">No users found.</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-sm">
-            {data?.total ?? 0} total users
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <Typography type="body-sm" color="muted">
+          {data?.total ?? 0} total users
+        </Typography>
       </div>
 
       {banDialogUser && (
@@ -398,49 +315,17 @@ function UsersTableSkeleton() {
   return (
     <div className="flex flex-col gap-4">
       <Skeleton className="h-10 w-72" />
-      <div className="overflow-hidden rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead>Repos</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {["s0", "s1", "s2", "s3", "s4"].map((id) => (
-              <TableRow key={id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="size-9 rounded-full" />
-                    <div className="flex flex-col gap-1">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-5 w-14" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-5 w-16" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-20" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-6" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="size-8" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="flex flex-col gap-3">
+        {["s0", "s1", "s2", "s3", "s4"].map((id) => (
+          <div key={id} className="flex items-center gap-3">
+            <Skeleton className="size-9 rounded-full" />
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <Skeleton className="ml-auto h-5 w-16" />
+          </div>
+        ))}
       </div>
     </div>
   );

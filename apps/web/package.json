@@ -34,7 +34,6 @@
     "@shipradar/database": "workspace:*",
     "@shipradar/types": "workspace:*",
     "@sentry/nextjs": "catalog:",
-    "@tanstack/react-table": "8.21.3",
     "@vercel/analytics": "1.6.1",
     "better-auth": "catalog:",
     "class-variance-authority": "0.7.1",
