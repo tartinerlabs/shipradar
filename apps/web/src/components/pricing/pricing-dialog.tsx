@@ -1,40 +1,31 @@
 "use client";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@web/components/ui/sheet";
-import { useState } from "react";
+import { Typography } from "@heroui/react";
+import { Sheet } from "@heroui-pro/react";
+import { type ReactElement, useState } from "react";
 import { PricingCards } from "./pricing-cards";
 
 interface PricingDialogProps {
-  children: React.ReactNode;
+  children: ReactElement<{ onPress?: () => void }>;
 }
 
 export function PricingDialog({ children }: PricingDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent
-        side="right"
-        className="w-full overflow-y-auto sm:max-w-xl md:max-w-2xl"
-      >
-        <SheetHeader>
-          <SheetTitle className="text-2xl">Choose your plan</SheetTitle>
-          <SheetDescription>
+    <Sheet isOpen={open} onOpenChange={setOpen} placement="right">
+      <Sheet.Trigger>{children}</Sheet.Trigger>
+      <Sheet.Content>
+        <Sheet.Header>
+          <Sheet.Heading>Choose your plan</Sheet.Heading>
+          <Typography type="body-sm" color="muted">
             Start free and upgrade when you need more.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="px-4 pb-4">
+          </Typography>
+        </Sheet.Header>
+        <Sheet.Body>
           <PricingCards compact onCheckout={() => setOpen(false)} />
-        </div>
-      </SheetContent>
+        </Sheet.Body>
+      </Sheet.Content>
     </Sheet>
   );
 }
