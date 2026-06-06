@@ -6,7 +6,6 @@ import {
   buttonVariants,
   Card,
   Chip,
-  Link,
   ProgressBar,
   Typography,
 } from "@heroui/react";
@@ -87,12 +86,6 @@ export function UpgradePrompt({
         <NextLink href="/pricing" className={buttonVariants({ size: "sm" })}>
           Upgrade to Pro
         </NextLink>
-        <Link
-          href="/api/auth/checkout/pro-monthly"
-          className={buttonVariants({ size: "sm", variant: "ghost" })}
-        >
-          $3/mo →
-        </Link>
       </Card.Footer>
     </Card>
   );

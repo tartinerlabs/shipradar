@@ -15,17 +15,21 @@ export function PricingDialog({ children }: PricingDialogProps) {
   return (
     <Sheet isOpen={open} onOpenChange={setOpen} placement="right">
       <Sheet.Trigger>{children}</Sheet.Trigger>
-      <Sheet.Content>
-        <Sheet.Header>
-          <Sheet.Heading>Choose your plan</Sheet.Heading>
-          <Typography type="body-sm" color="muted">
-            Start free and upgrade when you need more.
-          </Typography>
-        </Sheet.Header>
-        <Sheet.Body>
-          <PricingCards compact onCheckout={() => setOpen(false)} />
-        </Sheet.Body>
-      </Sheet.Content>
+      <Sheet.Backdrop>
+        <Sheet.Content>
+          <Sheet.Dialog>
+            <Sheet.Header>
+              <Sheet.Heading>Choose your plan</Sheet.Heading>
+              <Typography type="body-sm" color="muted">
+                Start free and upgrade when you need more.
+              </Typography>
+            </Sheet.Header>
+            <Sheet.Body>
+              <PricingCards compact onCheckout={() => setOpen(false)} />
+            </Sheet.Body>
+          </Sheet.Dialog>
+        </Sheet.Content>
+      </Sheet.Backdrop>
     </Sheet>
   );
 }
