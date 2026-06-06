@@ -4,15 +4,22 @@
 
 import * as Sentry from "@sentry/nextjs";
 
-Sentry.init({
-  dsn: "https://de61a7bd99dae6f86be7f55eeeb2edc9@o4510625388888064.ingest.de.sentry.io/4510657701544016",
+// Only initialize Sentry in production. Local dev (pnpm dev) and Vercel preview
+// deployments skip init entirely, so the SDK adds no overhead off production.
+if (
+  process.env.NEXT_PUBLIC_VERCEL_ENV === "production" &&
+  process.env.NEXT_PUBLIC_SENTRY_DSN
+) {
+  Sentry.init({
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+    // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+    tracesSampleRate: 1,
 
-  // Enable sending user PII (Personally Identifiable Information)
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
-});
+    // Mask PII: disable automatic collection of IP addresses and other default PII.
+    // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+    sendDefaultPii: false,
+  });
+}
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
