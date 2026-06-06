@@ -2,7 +2,20 @@
 
 ## Overview
 
-Next.js 16 dashboard with React 19, BetterAuth, and shadcn/ui. Handles authentication only; all API calls go to Hono via RPC.
+Next.js 16 dashboard with React 19, BetterAuth, and HeroUI v3 (`@heroui/react` + `@heroui-pro/react`). Handles authentication only; all API calls go to Hono via RPC.
+
+## UI: HeroUI v3 (Tailwind CSS v4 + React Aria)
+
+The dashboard, admin, auth, and pricing surfaces are built entirely on HeroUI v3. There is **no shadcn/ui** in this app.
+
+- **No provider** — HeroUI v3 needs no `<HeroUIProvider>`; styles come from `@heroui/styles` + the Pro glass theme in `globals.css`.
+- **Compound components** — use dot notation: `Card.Header`/`Card.Content`, `Switch.Control`/`Switch.Thumb`, `Modal.Backdrop`/`Modal.Dialog`, `Select.Trigger`/`Select.Popover`, `Dropdown.Popover`/`Dropdown.Menu`.
+- **`onPress` not `onClick`** on `Button`; semantic variants (`primary`/`secondary`/`outline`/`ghost`/`danger`/`danger-soft`), `isDisabled`/`isPending`/`isIconOnly`.
+- **`Typography`** for all text (`type="h1..h6|body|body-sm|body-xs"`, `color="default|muted"`, `weight`); `Typography.Code` for inline code. Typography only supports `default`/`muted` colors — for danger/success text use a token className (`text-danger`).
+- **Link-as-button**: `Button` has no `asChild`. Style a `Link` (next/link for internal, `@heroui/react` `Link` for external) with `buttonVariants({ variant, size, fullWidth })`.
+- **Pro components** (`@heroui-pro/react`): `AppLayout`, `Sidebar`, `Navbar`, `DataGrid`, `Sheet`, `NumberValue`, `ItemCard`. Tables use `DataGrid` (declarative `data`/`columns`/`getRowId`), not TanStack.
+- **No raw HTML** where a component fits (`Avatar` for icon containers, `Chip` for status). Push `"use client"` to the smallest interactive leaf; keep pages Server Components.
+- Look up component APIs via the `heroui-pro` MCP or the installed `.d.ts` before using. Follow the `heroui-pro-design-taste` skill.
 
 ## Commands
 
@@ -27,7 +40,6 @@ src/
           actions.ts
     (marketing)/               # Public marketing pages
   components/
-    ui/                        # shadcn/ui (generated - DO NOT MODIFY)
     dashboard/                 # Dashboard-specific components
     repos/                     # Repo-related components
   lib/
@@ -104,7 +116,7 @@ import { createRepo } from "./actions";
 
 ## RepoSearch Component
 
-Uses GitHub's **search API** to find repositories by keyword. Users type a query, see matching results with star counts, select one to preview details, then add to watchlist. Already-tracked repos show a checkmark.
+Uses GitHub's **search API** to find repositories by keyword. Built as a HeroUI `ComboBox` (async): users type a query, see matching results with star counts (`NumberValue`), and select one to add it to the watchlist directly (no two-step preview). Already-tracked repos are skipped on select.
 
 ## Code Style Guidelines
 
@@ -165,12 +177,6 @@ setRepos((previousRepos) =>
   )
 );
 ```
-
-## Generated Files (DO NOT MODIFY)
-
-- `src/components/ui/*` - shadcn/ui components
-- `src/lib/utils.ts` - shadcn/ui utilities
-- `components.json` - shadcn/ui config
 
 ## Authentication
 
