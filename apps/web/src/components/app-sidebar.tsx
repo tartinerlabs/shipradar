@@ -1,16 +1,8 @@
 "use client";
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@web/components/ui/sidebar";
+import { Avatar, Typography } from "@heroui/react";
+import { Sidebar } from "@heroui-pro/react";
+import { UserMenu } from "@web/components/user-menu";
 import { useSession } from "@web/lib/auth-client";
 import {
   BadgeCheck,
@@ -19,7 +11,6 @@ import {
   Plug,
   Shield,
 } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -55,64 +46,67 @@ export function AppSidebar() {
   const isAdmin = user?.role === "admin";
 
   return (
-    <Sidebar variant="inset" collapsible="icon">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <BadgeCheck className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">ShipRadar</span>
-                  <span className="truncate text-xs">Dashboard</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.title}
-                  >
-                    <Link href={item.href as Route}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              {isAdmin && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={
-                      pathname === adminNavItem.href ||
-                      pathname.startsWith(`${adminNavItem.href}/`)
-                    }
-                    tooltip={adminNavItem.title}
-                  >
-                    <Link href={adminNavItem.href as Route}>
-                      <adminNavItem.icon />
-                      <span>{adminNavItem.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+    <Sidebar>
+      <Sidebar.Header>
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 px-2 py-1.5 no-underline"
+        >
+          <Avatar className="size-8 shrink-0 rounded-lg bg-accent text-accent-foreground">
+            <Avatar.Fallback>
+              <BadgeCheck className="size-4" />
+            </Avatar.Fallback>
+          </Avatar>
+          <Typography className="flex flex-col leading-tight">
+            <Typography type="body-sm" weight="semibold">
+              ShipRadar
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              Dashboard
+            </Typography>
+          </Typography>
+        </Link>
+      </Sidebar.Header>
+
+      <Sidebar.Content>
+        <Sidebar.Group>
+          <Sidebar.GroupLabel>Navigation</Sidebar.GroupLabel>
+          <Sidebar.Menu>
+            {navItems.map((item) => (
+              <Sidebar.MenuItem
+                key={item.href}
+                href={item.href}
+                isCurrent={pathname === item.href}
+                tooltip={item.title}
+              >
+                <Sidebar.MenuIcon>
+                  <item.icon className="size-4" />
+                </Sidebar.MenuIcon>
+                <Sidebar.MenuLabel>{item.title}</Sidebar.MenuLabel>
+              </Sidebar.MenuItem>
+            ))}
+            {isAdmin && (
+              <Sidebar.MenuItem
+                href={adminNavItem.href}
+                isCurrent={
+                  pathname === adminNavItem.href ||
+                  pathname.startsWith(`${adminNavItem.href}/`)
+                }
+                tooltip={adminNavItem.title}
+              >
+                <Sidebar.MenuIcon>
+                  <adminNavItem.icon className="size-4" />
+                </Sidebar.MenuIcon>
+                <Sidebar.MenuLabel>{adminNavItem.title}</Sidebar.MenuLabel>
+              </Sidebar.MenuItem>
+            )}
+          </Sidebar.Menu>
+        </Sidebar.Group>
+      </Sidebar.Content>
+
+      <Sidebar.Footer>
+        <UserMenu />
+      </Sidebar.Footer>
     </Sidebar>
   );
 }

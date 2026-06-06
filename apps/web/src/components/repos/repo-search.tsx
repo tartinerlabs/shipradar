@@ -1,28 +1,18 @@
 "use client";
 
-import { Button } from "@web/components/ui/button";
-import { Input } from "@web/components/ui/input";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@web/components/ui/popover";
-import { Skeleton } from "@web/components/ui/skeleton";
+  Collection,
+  ComboBox,
+  Description,
+  Input,
+  Label,
+  ListBox,
+  Typography,
+} from "@heroui/react";
+import { NumberValue } from "@heroui-pro/react";
 import { api } from "@web/lib/api-client";
-import { cn } from "@web/lib/utils";
 import {
-  AlertCircle,
-  ArrowLeft,
-  Check,
-  ExternalLink,
-  GitFork,
-  Github,
-  Loader2,
-  Plus,
-  Search,
-  Star,
-} from "lucide-react";
-import {
+  type Key,
   useCallback,
   useEffect,
   useEffectEvent,
@@ -32,24 +22,10 @@ import {
 } from "react";
 
 interface RepoPreview {
+  id: string;
   name: string;
   owner: string;
-  description: string | null;
   stars: number;
-  forks: number;
-  language: string | null;
-  languageColor: string | null;
-  url: string;
-}
-
-function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`;
-  }
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}k`;
-  }
-  return num.toString();
 }
 
 interface TrackedRepo {
@@ -60,11 +36,8 @@ export function RepoSearch() {
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<RepoPreview[]>([]);
-  const [selectedRepo, setSelectedRepo] = useState<RepoPreview | null>(null);
-  const [open, setOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isSubmitting, startSubmitting] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const trackedReposRef = useRef<Set<string>>(new Set());
 
@@ -92,11 +65,11 @@ export function RepoSearch() {
         );
 
         if (!res.ok) {
-          if (res.status === 403) {
-            setError("Rate limited. Try again shortly.");
-          } else {
-            setError("Search failed");
-          }
+          setError(
+            res.status === 403
+              ? "Rate limited. Try again shortly."
+              : "Search failed",
+          );
           setResults([]);
           return;
         }
@@ -104,35 +77,19 @@ export function RepoSearch() {
         interface GitHubSearchItem {
           name: string;
           owner: { login: string };
-          description: string | null;
           stargazers_count: number;
-          forks_count: number;
-          language: string | null;
-          html_url: string;
         }
 
         const data: { items: GitHubSearchItem[] } = await res.json();
-
-        if (data.items.length === 0) {
-          setError("No repositories found");
-          setResults([]);
-          return;
-        }
-
-        const repos: RepoPreview[] = data.items.map((item) => ({
-          name: item.name,
-          owner: item.owner.login,
-          description: item.description,
-          stars: item.stargazers_count,
-          forks: item.forks_count,
-          language: item.language,
-          languageColor: null,
-          url: item.html_url,
-        }));
-
-        setResults(repos);
-        setError(null);
-        setOpen(true);
+        setResults(
+          data.items.map((item) => ({
+            id: `${item.owner.login}/${item.name}`,
+            name: item.name,
+            owner: item.owner.login,
+            stars: item.stargazers_count,
+          })),
+        );
+        setError(data.items.length === 0 ? "No repositories found" : null);
       } catch {
         setError("Network error");
         setResults([]);
@@ -146,17 +103,13 @@ export function RepoSearch() {
     }
 
     const trimmedQuery = query.trim();
-    if (!trimmedQuery || trimmedQuery.length < 2) {
+    if (trimmedQuery.length < 2) {
       setResults([]);
-      setSelectedRepo(null);
-      setOpen(false);
       setError(null);
       return;
     }
 
-    debounceRef.current = setTimeout(() => {
-      searchRepos(trimmedQuery);
-    }, 500);
+    debounceRef.current = setTimeout(() => searchRepos(trimmedQuery), 500);
 
     return () => {
       if (debounceRef.current) {
@@ -165,202 +118,62 @@ export function RepoSearch() {
     };
   }, [query, searchRepos]);
 
-  const handleSubmit = async () => {
-    if (!selectedRepo || isSubmitting) return;
+  const handleSelect = (key: Key | null) => {
+    if (key === null) return;
+    const repoName = String(key);
+    if (trackedReposRef.current.has(repoName.toLowerCase())) return;
 
-    const repoName = `${selectedRepo.owner}/${selectedRepo.name}`;
-    setIsSubmitting(true);
-
-    try {
-      await api.post("/repos", { repoName });
-      trackedReposRef.current.add(repoName.toLowerCase());
-      setQuery("");
-      setResults([]);
-      setSelectedRepo(null);
-      setError(null);
-      setOpen(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add repository");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      if (selectedRepo) {
-        setSelectedRepo(null);
-      } else {
-        setOpen(false);
+    startSubmitting(async () => {
+      try {
+        await api.post("/repos", { repoName });
+        trackedReposRef.current.add(repoName.toLowerCase());
+        setQuery("");
+        setResults([]);
+        setError(null);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to add repository",
+        );
       }
-    }
+    });
   };
-
-  const isRepoTracked = (repo: RepoPreview) =>
-    trackedReposRef.current.has(`${repo.owner}/${repo.name}`.toLowerCase());
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <div className="relative w-full max-w-sm">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            ref={inputRef}
-            placeholder="Search repositories..."
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setSelectedRepo(null);
-            }}
-            onKeyDown={handleKeyDown}
-            disabled={isSubmitting}
-            className={cn(
-              "h-9 pr-9 pl-9 font-mono text-sm",
-              error && query && "border-destructive/50",
-            )}
-          />
-          {isPending && (
-            <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+    <ComboBox
+      aria-label="Search repositories"
+      items={results}
+      inputValue={query}
+      onInputChange={setQuery}
+      onSelectionChange={handleSelect}
+      isDisabled={isSubmitting}
+      allowsEmptyCollection
+    >
+      <ComboBox.InputGroup>
+        <Input placeholder="Search repositories..." />
+        <ComboBox.Trigger />
+      </ComboBox.InputGroup>
+      <ComboBox.Popover>
+        <ListBox
+          renderEmptyState={() => (
+            <Typography type="body-sm" color="muted">
+              {isPending
+                ? "Searching…"
+                : (error ?? "Type at least 2 characters to search")}
+            </Typography>
           )}
-        </div>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-0"
-        align="start"
-        sideOffset={8}
-        onOpenAutoFocus={(e) => e.preventDefault()}
-      >
-        {error && !selectedRepo && (
-          <div className="flex items-center gap-2 border-b p-3 text-destructive text-sm">
-            <AlertCircle className="size-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Loading skeleton */}
-        {isPending && !selectedRepo && results.length === 0 && (
-          <div className="flex flex-col gap-1 p-2">
-            {["skeleton-1", "skeleton-2", "skeleton-3"].map((key) => (
-              <div key={key} className="flex items-center gap-3 px-2 py-1.5">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="ml-auto h-4 w-12" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Results list */}
-        {!selectedRepo && results.length > 0 && (
-          <div className="max-h-80 overflow-y-auto p-1">
-            {results.map((repo) => {
-              const tracked = isRepoTracked(repo);
-              return (
-                <button
-                  key={`${repo.owner}/${repo.name}`}
-                  type="button"
-                  onClick={() => setSelectedRepo(repo)}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm transition-colors",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    tracked && "opacity-60",
-                  )}
-                >
-                  <span className="min-w-0 flex-1 truncate font-mono">
-                    {repo.owner}/{repo.name}
-                  </span>
-                  <div className="flex shrink-0 items-center gap-2 text-muted-foreground text-xs">
-                    <div className="flex items-center gap-1">
-                      <Star className="size-3 text-amber-500" />
-                      <span>{formatNumber(repo.stars)}</span>
-                    </div>
-                    {tracked && <Check className="size-3 text-green-500" />}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Selected repo preview */}
-        {selectedRepo && (
-          <div className="flex flex-col gap-3 p-3">
-            <button
-              type="button"
-              onClick={() => setSelectedRepo(null)}
-              className="flex items-center gap-1 text-muted-foreground text-xs transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="size-3" />
-              Back to results
-            </button>
-            <div className="flex items-start gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-700 dark:to-neutral-800">
-                <Github className="size-4" />
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="truncate font-medium font-mono text-sm">
-                    {selectedRepo.owner}/{selectedRepo.name}
-                  </span>
-                  <a
-                    href={selectedRepo.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ExternalLink className="size-3.5" />
-                  </a>
-                </div>
-                {selectedRepo.description && (
-                  <p className="line-clamp-2 text-muted-foreground text-xs">
-                    {selectedRepo.description}
-                  </p>
-                )}
-                <div className="flex items-center gap-3 pt-1 text-muted-foreground text-xs">
-                  <div className="flex items-center gap-1">
-                    <Star className="size-3 text-amber-500" />
-                    <span>{formatNumber(selectedRepo.stars)}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <GitFork className="size-3" />
-                    <span>{formatNumber(selectedRepo.forks)}</span>
-                  </div>
-                  {selectedRepo.language && (
-                    <div className="flex items-center gap-1">
-                      <span className="size-2 rounded-full bg-muted-foreground" />
-                      <span>{selectedRepo.language}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              onClick={handleSubmit}
-              disabled={isSubmitting || isRepoTracked(selectedRepo)}
-              variant={isRepoTracked(selectedRepo) ? "secondary" : "default"}
-              className="w-full"
-            >
-              {isRepoTracked(selectedRepo) ? (
-                <>
-                  <Check className="size-4" />
-                  Tracked
-                </>
-              ) : isSubmitting ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                <>
-                  <Plus className="size-4" />
-                  Add to watchlist
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
+        >
+          <Collection items={results}>
+            {(repo: RepoPreview) => (
+              <ListBox.Item id={repo.id} textValue={repo.id}>
+                <Label>{repo.id}</Label>
+                <Description>
+                  <NumberValue value={repo.stars} notation="compact" /> stars
+                </Description>
+              </ListBox.Item>
+            )}
+          </Collection>
+        </ListBox>
+      </ComboBox.Popover>
+    </ComboBox>
   );
 }

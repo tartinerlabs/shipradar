@@ -1,21 +1,22 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@web/components/ui/avatar";
-import { Button } from "@web/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@web/components/ui/dropdown-menu";
+  Avatar,
+  Button,
+  Dropdown,
+  Header,
+  Label,
+  Separator,
+  Typography,
+} from "@heroui/react";
 import { useUserTier } from "@web/hooks/use-user-tier";
 import { signOut, useSession } from "@web/lib/auth-client";
 import { LogOut, Settings } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { Key } from "react";
 
 export function UserMenu() {
+  const router = useRouter();
   const { data: session } = useSession();
   const { tier } = useUserTier();
 
@@ -26,49 +27,59 @@ export function UserMenu() {
     return null;
   }
 
+  const initial = user.name?.charAt(0).toUpperCase() ?? "U";
+
+  const handleAction = (key: Key) => {
+    if (key === "settings") {
+      router.push("/dashboard/settings");
+    } else if (key === "logout") {
+      signOut();
+    }
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Avatar className="size-8">
-            <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
-            <AvatarFallback>
-              {user.name?.charAt(0).toUpperCase() ?? "U"}
-            </AvatarFallback>
-          </Avatar>
-          <span className="sr-only">User menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-56">
-        <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
-            <Avatar className="size-8">
-              <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
-              <AvatarFallback>
-                {user.name?.charAt(0).toUpperCase() ?? "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{user.name}</span>
-              <span className="truncate text-muted-foreground text-xs">
-                {tierLabel}
-              </span>
-            </div>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/dashboard/settings">
-            <Settings className="size-4" />
-            Settings
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>
-          <LogOut className="size-4" />
-          Log out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Dropdown>
+      <Button isIconOnly aria-label="User menu" variant="ghost">
+        <Avatar size="sm">
+          {user.image && (
+            <Avatar.Image src={user.image} alt={user.name ?? "User"} />
+          )}
+          <Avatar.Fallback>{initial}</Avatar.Fallback>
+        </Avatar>
+      </Button>
+      <Dropdown.Popover className="min-w-56">
+        <Dropdown.Menu onAction={handleAction}>
+          <Dropdown.Section>
+            <Header>
+              <div className="flex items-center gap-2">
+                <Avatar size="sm">
+                  {user.image && (
+                    <Avatar.Image src={user.image} alt={user.name ?? "User"} />
+                  )}
+                  <Avatar.Fallback>{initial}</Avatar.Fallback>
+                </Avatar>
+                <div className="flex min-w-0 flex-col">
+                  <Typography type="body-sm" weight="semibold" truncate>
+                    {user.name}
+                  </Typography>
+                  <Typography type="body-xs" color="muted">
+                    {tierLabel}
+                  </Typography>
+                </div>
+              </div>
+            </Header>
+            <Dropdown.Item id="settings" textValue="Settings">
+              <Settings className="size-4 text-muted" />
+              <Label>Settings</Label>
+            </Dropdown.Item>
+          </Dropdown.Section>
+          <Separator />
+          <Dropdown.Item id="logout" textValue="Log out" variant="danger">
+            <LogOut className="size-4 text-danger" />
+            <Label>Log out</Label>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
   );
 }
