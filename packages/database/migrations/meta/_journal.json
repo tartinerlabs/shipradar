@@ -43,6 +43,13 @@
       "when": 1777232976528,
       "tag": "0005_tidy_omega_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780814767402,
+      "tag": "0006_fancy_mac_gargan",
+      "breakpoints": true
     }
   ]
 }

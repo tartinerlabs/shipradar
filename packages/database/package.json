@@ -8,14 +8,16 @@
     "./auth-client": "./src/auth-client.ts"
   },
   "scripts": {
-    "auth:generate": "pnpm dlx auth@1.6.8 generate --output src/schema/auth.ts --yes",
-    "db:drop": "pnpm drizzle-kit drop",
-    "db:generate": "pnpm drizzle-kit generate",
-    "db:migrate": "pnpm drizzle-kit migrate"
+    "auth:generate": "pnx auth@1.6.8 generate --output src/schema/auth.ts --yes",
+    "db:drop": "drizzle-kit drop",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@better-auth/passkey": "1.6.8",
     "@neondatabase/serverless": "catalog:",
+    "@shipradar/redis": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "17.2.3",
     "drizzle-orm": "catalog:",
@@ -24,6 +26,5 @@
   "devDependencies": {
     "@types/node": "24.10.4",
     "drizzle-kit": "catalog:"
-  },
-  "packageManager": "pnpm@10.22.0"
+  }
 }

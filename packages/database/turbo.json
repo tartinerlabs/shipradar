@@ -15,6 +15,10 @@
       "cache": false,
       "interactive": true
     },
+    "db:push": {
+      "cache": false,
+      "interactive": true
+    },
     "db:generate": {
       "cache": false,
       "outputs": ["migrations/**"]

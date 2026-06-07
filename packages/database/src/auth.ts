@@ -9,6 +9,7 @@ import {
   oAuthProxy,
   twoFactor,
 } from "better-auth/plugins";
+import { redisSecondaryStorage } from "./adapters/redis-secondary-storage";
 import { db } from "./client";
 import * as schema from "./schema";
 
@@ -44,6 +45,7 @@ export const auth = betterAuth({
     jwt(),
     nextCookies(), // This must always be the last in the array
   ],
+  secondaryStorage: redisSecondaryStorage,
   socialProviders: {
     discord: {
       clientId: process.env.DISCORD_CLIENT_ID as string,

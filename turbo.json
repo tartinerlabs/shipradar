@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/turbo/schema.json",
   "ui": "tui",
-  "envMode": "loose",
+  "envMode": "strict",
   "remoteCache": {
     "signature": true
   },

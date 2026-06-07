@@ -1,11 +1,11 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
+  index,
+  integer,
   pgTable,
   text,
   timestamp,
-  boolean,
-  integer,
-  index,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -25,26 +25,6 @@ export const users = pgTable("users", {
   banExpires: timestamp("ban_expires"),
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
 });
-
-export const sessions = pgTable(
-  "sessions",
-  {
-    id: text("id").primaryKey(),
-    expiresAt: timestamp("expires_at").notNull(),
-    token: text("token").notNull().unique(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .$onUpdate(() => /* @__PURE__ */ new Date())
-      .notNull(),
-    ipAddress: text("ip_address"),
-    userAgent: text("user_agent"),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    impersonatedBy: text("impersonated_by"),
-  },
-  (table) => [index("sessions_userId_idx").on(table.userId)],
-);
 
 export const accounts = pgTable(
   "accounts",
@@ -68,22 +48,6 @@ export const accounts = pgTable(
       .notNull(),
   },
   (table) => [index("accounts_userId_idx").on(table.userId)],
-);
-
-export const verifications = pgTable(
-  "verifications",
-  {
-    id: text("id").primaryKey(),
-    identifier: text("identifier").notNull(),
-    value: text("value").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => /* @__PURE__ */ new Date())
-      .notNull(),
-  },
-  (table) => [index("verifications_identifier_idx").on(table.identifier)],
 );
 
 export const passkeys = pgTable(
@@ -135,17 +99,9 @@ export const jwkss = pgTable("jwkss", {
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
-  sessions: many(sessions),
   accounts: many(accounts),
   passkeys: many(passkeys),
   twoFactors: many(twoFactors),
-}));
-
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  users: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
-  }),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({

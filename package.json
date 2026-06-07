@@ -17,6 +17,7 @@
     "deploy": "turbo run deploy",
     "auth:generate": "turbo run auth:generate",
     "db:drop": "turbo run db:drop",
+    "db:push": "turbo run db:push",
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
     "prepare": "husky"
