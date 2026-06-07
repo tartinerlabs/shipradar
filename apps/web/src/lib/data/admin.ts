@@ -11,9 +11,6 @@ import { count, desc, eq, ilike, or } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
 import { redirect } from "next/navigation";
 
-const NOTIFICATIONS_SENT_KEY = "notifications_sent";
-const RELEASES_NOTIFIED_KEY = "releases_notified";
-
 export interface AdminStats {
   uniqueUsers: number;
   reposWatched: number;
@@ -129,8 +126,8 @@ async function queryAdminStats(): Promise<AdminStats> {
         .from(users)
         .then((rows) => rows[0]?.count ?? 0),
       db.select({ repoName: userRepos.repoName }).from(userRepos),
-      redis.get<number>(NOTIFICATIONS_SENT_KEY),
-      redis.get<number>(RELEASES_NOTIFIED_KEY),
+      redis.get<number>("notifications:sent"),
+      redis.get<number>("releases:notified"),
     ]);
 
   return {
