@@ -1,8 +1,22 @@
 import { AdminNav } from "@web/components/admin/admin-nav";
-import { UsersTable } from "@web/components/admin/users-table";
+import {
+  UsersTable,
+  UsersTableSkeleton,
+} from "@web/components/admin/users-table";
+import { getAdminUsers } from "@web/lib/data/admin";
 import { Shield, Users } from "lucide-react";
+import type { SearchParams } from "nuqs/server";
+import { Suspense } from "react";
+import { adminUsersSearchParamsCache } from "./search-params";
 
-export default function AdminUsersPage() {
+interface PageProps {
+  searchParams: Promise<SearchParams>;
+}
+
+export default async function AdminUsersPage({ searchParams }: PageProps) {
+  const { search, offset } =
+    await adminUsersSearchParamsCache.parse(searchParams);
+
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
@@ -29,8 +43,21 @@ export default function AdminUsersPage() {
           <Users className="size-5" />
           <h2 className="font-semibold text-lg">User Management</h2>
         </div>
-        <UsersTable />
+        <Suspense fallback={<UsersTableSkeleton />}>
+          <AdminUsersTable search={search} offset={offset} />
+        </Suspense>
       </section>
     </div>
   );
+}
+
+async function AdminUsersTable({
+  search,
+  offset,
+}: {
+  search: string;
+  offset: number;
+}) {
+  const data = await getAdminUsers({ search, offset, limit: 20 });
+  return <UsersTable data={data} />;
 }

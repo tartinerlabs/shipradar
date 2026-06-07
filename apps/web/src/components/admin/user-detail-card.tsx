@@ -10,8 +10,9 @@ import {
   Skeleton,
   Typography,
 } from "@heroui/react";
+import { unbanUser } from "@web/app/(dashboard)/dashboard/admin/users/actions";
 import { BanUserDialog } from "@web/components/admin/ban-user-dialog";
-import { api } from "@web/lib/api-client";
+import type { AdminUserDetail } from "@web/lib/data/admin";
 import {
   AlertTriangle,
   Ban,
@@ -25,80 +26,32 @@ import {
   ShieldCheck,
   UserX,
 } from "lucide-react";
-import { useCallback, useEffect, useState, useTransition } from "react";
-
-interface UserDetail {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    emailVerified: boolean;
-    image: string | null;
-    role: string | null;
-    banned: boolean | null;
-    banReason: string | null;
-    banExpires: string | null;
-    twoFactorEnabled: boolean | null;
-    createdAt: string;
-    updatedAt: string;
-  };
-  repos: {
-    id: string;
-    repoName: string;
-    lastNotifiedTag: string | null;
-    createdAt: string;
-  }[];
-  channels: {
-    id: string;
-    type: string;
-    enabled: boolean;
-    createdAt: string;
-  }[];
-  connectedAccounts: {
-    id: string;
-    providerId: string;
-    createdAt: string;
-  }[];
-}
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 interface UserDetailCardProps {
-  userId: string;
+  data: AdminUserDetail;
 }
 
-export function UserDetailCard({ userId }: UserDetailCardProps) {
-  const [data, setData] = useState<UserDetail | null>(null);
+export function UserDetailCard({ data }: UserDetailCardProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showBanDialog, setShowBanDialog] = useState(false);
 
-  const fetchUser = useCallback(() => {
-    startTransition(async () => {
-      try {
-        const responseData = await api.get<UserDetail>(
-          `/admin/users/${userId}`,
-        );
-        setData(responseData);
-      } catch {
-        // Ignore
-      }
-    });
-  }, [userId]);
-
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
-
-  const handleUnban = async () => {
-    try {
-      await api.post(`/admin/users/${userId}/ban`, { action: "unban" });
-      fetchUser();
-    } catch {
-      // Handle error
-    }
+  const refreshUser = () => {
+    router.refresh();
   };
 
-  if (isPending || !data) {
-    return <UserDetailCardSkeleton />;
-  }
+  const handleUnban = () => {
+    startTransition(async () => {
+      try {
+        await unbanUser(data.user.id);
+        router.refresh();
+      } catch {
+        // Ignore errors here; the surrounding admin table exposes bulk errors.
+      }
+    });
+  };
 
   const { user, repos, channels, connectedAccounts } = data;
   const isAdmin = user.role === "admin";
@@ -224,7 +177,11 @@ export function UserDetailCard({ userId }: UserDetailCardProps) {
                 <Separator />
                 <div className="flex gap-2">
                   {user.banned && (
-                    <Button variant="outline" onPress={handleUnban}>
+                    <Button
+                      variant="outline"
+                      onPress={handleUnban}
+                      isPending={isPending}
+                    >
                       <Check className="size-4" />
                       Unban User
                     </Button>
@@ -369,7 +326,7 @@ export function UserDetailCard({ userId }: UserDetailCardProps) {
           user={user}
           open={showBanDialog}
           onOpenChange={setShowBanDialog}
-          onBanned={fetchUser}
+          onBanned={refreshUser}
         />
       )}
     </>
@@ -424,7 +381,7 @@ function ChannelIcon({ type }: { type: string }) {
   return <AlertTriangle className="size-4 text-muted" />;
 }
 
-function UserDetailCardSkeleton() {
+export function UserDetailCardSkeleton() {
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <Card className="lg:col-span-2">

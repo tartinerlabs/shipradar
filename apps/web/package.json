@@ -17,6 +17,7 @@
     "@heroui/styles": "3.1.0",
     "@number-flow/react": "0.6.0",
     "@shipradar/database": "workspace:*",
+    "@shipradar/redis": "workspace:*",
     "@shipradar/types": "workspace:*",
     "@sentry/nextjs": "catalog:",
     "@vercel/analytics": "1.6.1",

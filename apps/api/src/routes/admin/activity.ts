@@ -1,6 +1,4 @@
 import { zValidator } from "@hono/zod-validator";
-import { db, sessions, users } from "@shipradar/database";
-import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import * as z from "zod";
 import type { AuthEnv } from "../../middleware/auth";
@@ -17,31 +15,8 @@ const app = new Hono<AuthEnv>().basePath("/activity").get(
   async (c) => {
     const { limit, offset } = c.req.valid("query");
 
-    try {
-      const activityLogs = await db
-        .select({
-          id: sessions.id,
-          userId: sessions.userId,
-          userName: users.name,
-          userEmail: users.email,
-          userImage: users.image,
-          ipAddress: sessions.ipAddress,
-          userAgent: sessions.userAgent,
-          createdAt: sessions.createdAt,
-          expiresAt: sessions.expiresAt,
-          impersonatedBy: sessions.impersonatedBy,
-        })
-        .from(sessions)
-        .leftJoin(users, eq(sessions.userId, users.id))
-        .orderBy(desc(sessions.createdAt))
-        .limit(limit)
-        .offset(offset);
-
-      return c.json({ activity: activityLogs, limit, offset });
-    } catch (err) {
-      console.error("Failed to fetch activity logs", err);
-      return c.json({ error: "Failed to fetch activity logs" }, 500);
-    }
+    // Better Auth sessions live in Redis secondary storage, not Postgres.
+    return c.json({ activity: [], limit, offset });
   },
 );
 

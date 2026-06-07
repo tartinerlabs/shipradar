@@ -1,8 +1,21 @@
-import { ActivityTable } from "@web/components/admin/activity-table";
+import {
+  ActivityTable,
+  ActivityTableSkeleton,
+} from "@web/components/admin/activity-table";
 import { AdminNav } from "@web/components/admin/admin-nav";
+import { getAdminActivity } from "@web/lib/data/admin";
 import { Activity, Shield } from "lucide-react";
+import type { SearchParams } from "nuqs/server";
+import { Suspense } from "react";
+import { adminActivitySearchParamsCache } from "./search-params";
 
-export default function AdminActivityPage() {
+interface PageProps {
+  searchParams: Promise<SearchParams>;
+}
+
+export default async function AdminActivityPage({ searchParams }: PageProps) {
+  const { offset } = await adminActivitySearchParamsCache.parse(searchParams);
+
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
@@ -29,8 +42,15 @@ export default function AdminActivityPage() {
           <Activity className="size-5" />
           <h2 className="font-semibold text-lg">Activity Logs</h2>
         </div>
-        <ActivityTable />
+        <Suspense fallback={<ActivityTableSkeleton />}>
+          <AdminActivityTable offset={offset} />
+        </Suspense>
       </section>
     </div>
   );
+}
+
+async function AdminActivityTable({ offset }: { offset: number }) {
+  const data = await getAdminActivity({ limit: 20, offset });
+  return <ActivityTable data={data} />;
 }

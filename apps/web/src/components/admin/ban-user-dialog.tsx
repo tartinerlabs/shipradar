@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from "@heroui/react";
-import { api } from "@web/lib/api-client";
+import { banUser } from "@web/app/(dashboard)/dashboard/admin/users/actions";
 import { AlertTriangle, Ban } from "lucide-react";
 import { type Key, useState, useTransition } from "react";
 
@@ -47,8 +47,7 @@ export function BanUserDialog({
     startTransition(async () => {
       try {
         setError(null);
-        await api.post(`/admin/users/${user.id}/ban`, {
-          action: "ban",
+        await banUser(user.id, {
           banReason: reason || undefined,
           banExpiresIn: duration === "permanent" ? undefined : Number(duration),
         });

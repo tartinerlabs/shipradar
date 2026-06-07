@@ -1,47 +1,10 @@
-"use client";
-
 import { Avatar, Card, Skeleton, Typography } from "@heroui/react";
 import { NumberValue } from "@heroui-pro/react";
-import { api } from "@web/lib/api-client";
+import { getAdminStats } from "@web/lib/data/admin";
 import { Bell, FolderGit2, Send, Tag, Users } from "lucide-react";
-import { useCallback, useEffect, useState, useTransition } from "react";
 
-interface AdminStats {
-  uniqueUsers: number;
-  reposWatched: number;
-  reposTracked: number;
-  notificationsSent: number;
-  releasesNotified: number;
-}
-
-export function AdminStatsCards() {
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  const fetchStats = useCallback(() => {
-    startTransition(async () => {
-      try {
-        const data = await api.get<AdminStats>("/admin/stats");
-        setStats(data);
-      } catch {
-        // Ignore errors
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
-
-  if (isPending || !stats) {
-    return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {["s0", "s1", "s2", "s3", "s4"].map((id) => (
-          <AdminStatsCardSkeleton key={id} />
-        ))}
-      </div>
-    );
-  }
+export async function AdminStatsCards() {
+  const stats = await getAdminStats();
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -100,16 +63,20 @@ function AdminStatsCard({ icon: Icon, label, value }: AdminStatsCardProps) {
   );
 }
 
-function AdminStatsCardSkeleton() {
+export function AdminStatsCardsSkeleton() {
   return (
-    <Card>
-      <Card.Content>
-        <Skeleton className="size-10 rounded-full" />
-        <div className="flex flex-col gap-1.5">
-          <Skeleton className="h-3 w-16" />
-          <Skeleton className="h-7 w-12" />
-        </div>
-      </Card.Content>
-    </Card>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      {["s0", "s1", "s2", "s3", "s4"].map((id) => (
+        <Card key={id}>
+          <Card.Content>
+            <Skeleton className="size-10 rounded-full" />
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-7 w-12" />
+            </div>
+          </Card.Content>
+        </Card>
+      ))}
+    </div>
   );
 }

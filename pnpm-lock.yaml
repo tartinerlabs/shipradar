@@ -168,6 +168,9 @@ importers:
       '@shipradar/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@shipradar/redis':
+        specifier: workspace:*
+        version: link:../../packages/redis
       '@shipradar/types':
         specifier: workspace:*
         version: link:../../packages/types

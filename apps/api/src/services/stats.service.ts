@@ -1,3 +1,4 @@
+import { db, userRepos } from "@shipradar/database";
 import { redis } from "@shipradar/redis";
 import type { SystemStats } from "@shipradar/types";
 import { getAllTrackedRepos } from "./kv.service";
@@ -8,21 +9,33 @@ const RELEASES_NOTIFIED_KEY = "releases_notified";
 async function computeStats(): Promise<
   Pick<SystemStats, "uniqueUsers" | "reposWatched" | "reposTracked">
 > {
-  const trackedReposMap = await getAllTrackedRepos();
+  const [trackedReposMap, dbTrackedRepos] = await Promise.all([
+    getAllTrackedRepos(),
+    db
+      .select({ userId: userRepos.userId, repoName: userRepos.repoName })
+      .from(userRepos),
+  ]);
 
-  const uniqueUsers = trackedReposMap.size;
+  const uniqueUsersSet = new Set<string>();
   const allRepos = new Set<string>();
   let reposTracked = 0;
 
-  for (const repos of trackedReposMap.values()) {
+  for (const [chatId, repos] of trackedReposMap) {
+    uniqueUsersSet.add(`telegram:${chatId}`);
     reposTracked += repos.length;
     for (const repo of repos) {
       allRepos.add(repo);
     }
   }
 
+  for (const row of dbTrackedRepos) {
+    uniqueUsersSet.add(`user:${row.userId}`);
+    allRepos.add(row.repoName);
+    reposTracked++;
+  }
+
   return {
-    uniqueUsers,
+    uniqueUsers: uniqueUsersSet.size,
     reposWatched: allRepos.size,
     reposTracked,
   };
