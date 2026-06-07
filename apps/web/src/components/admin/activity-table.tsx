@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@heroui/react";
 import { DataGrid, type DataGridColumn } from "@heroui-pro/react";
-import { api } from "@web/lib/api-client";
+import type { ActivityLog, AdminActivityResult } from "@web/lib/data/admin";
 import {
   Activity,
   Laptop,
@@ -18,25 +18,11 @@ import {
   UserCircle,
 } from "lucide-react";
 import type { Route } from "next";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 
-interface ActivityLog {
-  id: string;
-  userId: string;
-  userName: string | null;
-  userEmail: string | null;
-  userImage: string | null;
-  ipAddress: string | null;
-  userAgent: string | null;
-  createdAt: string;
-  expiresAt: string;
-  impersonatedBy: string | null;
-}
-
-interface ActivityResponse {
-  activity: ActivityLog[];
-  limit: number;
-  offset: number;
+interface ActivityTableProps {
+  data: AdminActivityResult;
 }
 
 function parseUserAgent(ua: string | null): {
@@ -75,31 +61,19 @@ function DeviceIcon({ device }: { device: "desktop" | "mobile" | "tablet" }) {
   return <Monitor className="size-4" />;
 }
 
-export function ActivityTable() {
-  const [data, setData] = useState<ActivityResponse | null>(null);
+export function ActivityTable({ data }: ActivityTableProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [page, setPage] = useState(0);
 
-  const fetchActivity = useCallback((offset: number) => {
-    startTransition(async () => {
-      try {
-        const params = new URLSearchParams({
-          limit: "20",
-          offset: String(offset),
-        });
-        const responseData = await api.get<ActivityResponse>(
-          `/admin/activity?${params}`,
-        );
-        setData(responseData);
-      } catch {
-        // Ignore
-      }
+  const navigateToOffset = (offset: number) => {
+    startTransition(() => {
+      const normalizedOffset = Math.max(0, offset);
+      const href = normalizedOffset
+        ? `/dashboard/admin/activity?offset=${normalizedOffset}`
+        : "/dashboard/admin/activity";
+      router.replace(href as Route);
     });
-  }, []);
-
-  useEffect(() => {
-    fetchActivity(page * 20);
-  }, [fetchActivity, page]);
+  };
 
   const columns: DataGridColumn<ActivityLog>[] = [
     {
@@ -212,10 +186,6 @@ export function ActivityTable() {
     },
   ];
 
-  if (!data && isPending) {
-    return <ActivityTableSkeleton />;
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
@@ -227,7 +197,7 @@ export function ActivityTable() {
 
       <DataGrid
         aria-label="Session activity"
-        data={data?.activity ?? []}
+        data={data.activity}
         columns={columns}
         getRowId={(log) => log.id}
         renderEmptyState={() => (
@@ -242,16 +212,16 @@ export function ActivityTable() {
         <Button
           variant="outline"
           size="sm"
-          onPress={() => setPage((p) => Math.max(0, p - 1))}
-          isDisabled={page === 0}
+          onPress={() => navigateToOffset(data.offset - data.limit)}
+          isDisabled={data.offset === 0 || isPending}
         >
           Previous
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onPress={() => setPage((p) => p + 1)}
-          isDisabled={(data?.activity.length ?? 0) < 20}
+          onPress={() => navigateToOffset(data.offset + data.limit)}
+          isDisabled={data.activity.length < data.limit || isPending}
         >
           Next
         </Button>
@@ -260,7 +230,7 @@ export function ActivityTable() {
   );
 }
 
-function ActivityTableSkeleton() {
+export function ActivityTableSkeleton() {
   return (
     <div className="flex flex-col gap-4">
       <Skeleton className="h-5 w-40" />

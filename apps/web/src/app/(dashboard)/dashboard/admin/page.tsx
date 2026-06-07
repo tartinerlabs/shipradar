@@ -1,9 +1,13 @@
 import { Avatar, Card, Typography } from "@heroui/react";
 import { AdminNav } from "@web/components/admin/admin-nav";
-import { AdminStatsCards } from "@web/components/admin/admin-stats-cards";
+import {
+  AdminStatsCards,
+  AdminStatsCardsSkeleton,
+} from "@web/components/admin/admin-stats-cards";
 import { Activity, ArrowRight, Shield, Users } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default function AdminPage() {
   return (
@@ -29,7 +33,9 @@ export default function AdminPage() {
       {/* Stats */}
       <section className="flex flex-col gap-4">
         <Typography type="h6">System Metrics</Typography>
-        <AdminStatsCards />
+        <Suspense fallback={<AdminStatsCardsSkeleton />}>
+          <AdminStatsCards />
+        </Suspense>
       </section>
 
       {/* Quick Access */}

@@ -1,8 +1,14 @@
 import { Avatar, buttonVariants, Typography } from "@heroui/react";
-import { UserDetailCard } from "@web/components/admin/user-detail-card";
+import {
+  UserDetailCard,
+  UserDetailCardSkeleton,
+} from "@web/components/admin/user-detail-card";
+import { getAdminUser } from "@web/lib/data/admin";
 import { ArrowLeft, Shield } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 interface UserDetailPageProps {
   params: Promise<{ id: string }>;
@@ -36,7 +42,19 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
       </div>
 
       {/* User Detail */}
-      <UserDetailCard userId={id} />
+      <Suspense fallback={<UserDetailCardSkeleton />}>
+        <AdminUserDetail userId={id} />
+      </Suspense>
     </div>
   );
+}
+
+async function AdminUserDetail({ userId }: { userId: string }) {
+  const data = await getAdminUser(userId);
+
+  if (!data) {
+    notFound();
+  }
+
+  return <UserDetailCard data={data} />;
 }

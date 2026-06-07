@@ -13,8 +13,9 @@ import {
   Typography,
 } from "@heroui/react";
 import { DataGrid, type DataGridColumn, NumberValue } from "@heroui-pro/react";
+import { unbanUser } from "@web/app/(dashboard)/dashboard/admin/users/actions";
 import { BanUserDialog } from "@web/components/admin/ban-user-dialog";
-import { api } from "@web/lib/api-client";
+import type { AdminUserSummary, AdminUsersResult } from "@web/lib/data/admin";
 import {
   Ban,
   Check,
@@ -34,24 +35,9 @@ import {
   useTransition,
 } from "react";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  role: string | null;
-  banned: boolean | null;
-  banReason: string | null;
-  banExpires: string | null;
-  createdAt: string;
-  repoCount: number;
-}
-
-interface UsersResponse {
-  users: User[];
-  total: number;
-  limit: number;
-  offset: number;
+interface UsersTableProps {
+  data: AdminUsersResult;
+  search: string;
 }
 
 function formatJoined(dateString: string): string {
@@ -62,55 +48,54 @@ function formatJoined(dateString: string): string {
   });
 }
 
-export function UsersTable() {
+export function UsersTable({ data, search }: UsersTableProps) {
   const router = useRouter();
-  const [data, setData] = useState<UsersResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [banDialogUser, setBanDialogUser] = useState<User | null>(null);
-
-  const fetchUsers = useCallback((search = "") => {
-    startTransition(async () => {
-      try {
-        setError(null);
-        const params = new URLSearchParams({ limit: "20", offset: "0" });
-        if (search) params.set("search", search);
-        const responseData = await api.get<UsersResponse>(
-          `/admin/users?${params}`,
-        );
-        setData(responseData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load users");
-      }
-    });
-  }, []);
+  const [searchQuery, setSearchQuery] = useState(search);
+  const [banDialogUser, setBanDialogUser] = useState<AdminUserSummary | null>(
+    null,
+  );
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    setSearchQuery(search);
+  }, [search]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      fetchUsers(searchQuery);
+      const params = new URLSearchParams();
+      const trimmedSearch = searchQuery.trim();
+      if (trimmedSearch) params.set("search", trimmedSearch);
+
+      const queryString = params.toString();
+      const href = queryString
+        ? `/dashboard/admin/users?${queryString}`
+        : "/dashboard/admin/users";
+
+      startTransition(() => {
+        router.replace(href as Route);
+      });
     }, 300);
     return () => clearTimeout(timeout);
-  }, [searchQuery, fetchUsers]);
+  }, [router, searchQuery]);
 
   const handleUnban = useCallback(
     async (userId: string) => {
-      try {
-        await api.post(`/admin/users/${userId}/ban`, { action: "unban" });
-        fetchUsers(searchQuery);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to unban user");
-      }
+      startTransition(async () => {
+        try {
+          setError(null);
+          await unbanUser(userId);
+          router.refresh();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to unban user");
+        }
+      });
     },
-    [fetchUsers, searchQuery],
+    [router],
   );
 
   const handleRowAction = useCallback(
-    (user: User, key: Key) => {
+    (user: AdminUserSummary, key: Key) => {
       if (key === "view") {
         router.push(`/dashboard/admin/users/${user.id}` as Route);
       } else if (key === "unban") {
@@ -122,7 +107,7 @@ export function UsersTable() {
     [router, handleUnban],
   );
 
-  const columns: DataGridColumn<User>[] = [
+  const columns: DataGridColumn<AdminUserSummary>[] = [
     {
       id: "name",
       header: "User",
@@ -249,10 +234,6 @@ export function UsersTable() {
     },
   ];
 
-  if (!data && isPending) {
-    return <UsersTableSkeleton />;
-  }
-
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -264,7 +245,8 @@ export function UsersTable() {
             <Button
               variant="ghost"
               size="sm"
-              onPress={() => fetchUsers(searchQuery)}
+              isDisabled={isPending}
+              onPress={() => router.refresh()}
             >
               Retry
             </Button>
@@ -307,14 +289,14 @@ export function UsersTable() {
           user={banDialogUser}
           open={!!banDialogUser}
           onOpenChange={(open) => !open && setBanDialogUser(null)}
-          onBanned={() => fetchUsers(searchQuery)}
+          onBanned={() => router.refresh()}
         />
       )}
     </>
   );
 }
 
-function UsersTableSkeleton() {
+export function UsersTableSkeleton() {
   return (
     <div className="flex flex-col gap-4">
       <Skeleton className="h-10 w-72" />

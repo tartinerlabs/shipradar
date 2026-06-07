@@ -1,8 +1,22 @@
-import { ActivityTable } from "@web/components/admin/activity-table";
+import {
+  ActivityTable,
+  ActivityTableSkeleton,
+} from "@web/components/admin/activity-table";
 import { AdminNav } from "@web/components/admin/admin-nav";
+import { getAdminActivity } from "@web/lib/data/admin";
 import { Activity, Shield } from "lucide-react";
+import { Suspense } from "react";
 
-export default function AdminActivityPage() {
+interface AdminActivityPageProps {
+  searchParams: Promise<{ offset?: string }>;
+}
+
+export default async function AdminActivityPage({
+  searchParams,
+}: AdminActivityPageProps) {
+  const params = await searchParams;
+  const offset = Number(params.offset ?? 0);
+
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
@@ -29,8 +43,15 @@ export default function AdminActivityPage() {
           <Activity className="size-5" />
           <h2 className="font-semibold text-lg">Activity Logs</h2>
         </div>
-        <ActivityTable />
+        <Suspense fallback={<ActivityTableSkeleton />}>
+          <AdminActivityTable offset={offset} />
+        </Suspense>
       </section>
     </div>
   );
+}
+
+async function AdminActivityTable({ offset }: { offset: number }) {
+  const data = await getAdminActivity({ limit: 20, offset });
+  return <ActivityTable data={data} />;
 }
